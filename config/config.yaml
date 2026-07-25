@@ -1,0 +1,117 @@
+# W&G Baird Sales Intelligence — runtime configuration
+# All analytical knobs live here; nothing is hardcoded in application code.
+
+fx:
+  eur_to_gbp: 0.85
+
+# Keys are the form produced after lowercase, whitespace collapse, and
+# slash-spacing normalisation. Values are the canonical display names
+# (title-cased by the cleaner after lookup).
+# Only typo / spacing variants belong here. Real product distinctions
+# must never be collapsed.
+product_type_normalisation:
+  "brochures / price list": "Brochures / Price List"
+  "leaflets to a4 / price lists": "Leaflets to A4 / Price Lists"
+  "books / educational books": "Educational Books"
+  "educational books": "Educational Books"
+  "miscellaneous -ask advice": "Miscellaneous - Ask Advice"
+  "miscellaneous-ask advice": "Miscellaneous - Ask Advice"
+  "certficates": "Certificates"
+  "certificates": "Certificates"
+
+# Coarse rollup for board-level charts and as an extra model feature.
+# Keys are product_type_norm labels; unmatched labels fall to "Other".
+product_group_map:
+  Educational Books: Books
+  Books (Not Adult Colouring): Books
+  Books: Books
+  Bpuk Softback Book: Books
+  Bpuk Hardback Book: Books
+  Prospectus: Books
+  Bookmarks: Books
+  Covers (Unfinished Part): Books
+  Kitting Own Books / Ffilment: Books
+
+  Magazines: Magazines
+
+  Brochures / Price List: Brochures & Leaflets
+  Leaflets to A4 / Price Lists: Brochures & Leaflets
+  Leaflets To A4: Brochures & Leaflets
+  Catalogues: Brochures & Leaflets
+
+  Business Cards: Business Stationery
+  Stationery / Invitations: Business Stationery
+  Stationery / Notepads: Business Stationery
+  Writing / Memo / Note Pads: Business Stationery
+  Envelopes: Business Stationery
+  Application Forms: Business Stationery
+  Certificates: Business Stationery
+  Christmas Card / Postcards: Business Stationery
+  Diaries: Business Stationery
+  Diaries / Yearbooks: Business Stationery
+  Calendar Any Kind / Wallplan: Business Stationery
+  Tent Cards: Business Stationery
+  Tent Cards / Swatch Cards: Business Stationery
+
+  Labels / Stickers / Tags: Labels & Packaging
+  Paper Packaging / Cartons: Labels & Packaging
+  Flat Sheets / Box Shapes: Labels & Packaging
+  Plain Paper: Labels & Packaging
+  Gift Card / Vouchers: Labels & Packaging
+  Gift Vouchers / Holders: Labels & Packaging
+
+  Posters: Wide Format & Signage
+  Roll-Up Banners: Wide Format & Signage
+  Signage (Large): Wide Format & Signage
+  Signage: Wide Format & Signage
+  Banners Printed: Wide Format & Signage
+  Banners: Wide Format & Signage
+  Point Of Sale Products: Wide Format & Signage
+  Maps: Wide Format & Signage
+
+  Tickets: Tickets, Cards & Menus
+  Tickets / Postcards / Tags: Tickets, Cards & Menus
+  Postcards / Tags: Tickets, Cards & Menus
+  Menu: Tickets, Cards & Menus
+  Menu (Takeaway / Throwaway): Tickets, Cards & Menus
+  Menu (Cafe / Restaurant): Tickets, Cards & Menus
+
+  Folders No Capacity Or Flap: Folders & Binders
+  Folders With Capacity Only: Folders & Binders
+  Folders With Capacity: Folders & Binders
+  Ringbinders Sealed Edge: Folders & Binders
+
+  Postage / Mailing: Fulfilment & Postage
+  Delivery Only: Fulfilment & Postage
+  Fulfilment - Other: Fulfilment & Postage
+  Pack And Distribution: Fulfilment & Postage
+  Pack And Postage: Fulfilment & Postage
+  Postage: Fulfilment & Postage
+
+  Miscellaneous - Ask Advice: Other
+  Proofs For Zero Rated Item: Other
+
+banned_features:
+  - Labour
+  - Paper
+  - Puchases
+  - Rebate
+  - Mup%
+  - labmup
+  - manadj
+  - mupnett
+  - Sell Price
+  - AmtInv
+  - VA%
+  - VA/24
+  - VA/K
+  - VA Amount
+  - SalesOut
+  - Ship date
+  - Job Status
+
+dormancy:
+  percentile: 90
+
+model:
+  train_cutoff: "2025-12-31"
