@@ -76,8 +76,8 @@ python -m venv .venv
 pip install -r backend/requirements.txt
 cd backend
 python manage.py migrate
-python manage.py ingest_data ../data/raw/history_2023_2025.xlsx
-python manage.py ingest_data ../data/raw/update_2026.xlsx
+python manage.py ingest_data --file ../data/raw/history_2023_2025.xlsx
+python manage.py ingest_data --file ../data/raw/update_2026.xlsx
 python -m ml.train
 python manage.py runserver 127.0.0.1:8000
 ```
