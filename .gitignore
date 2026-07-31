@@ -11,4 +11,6 @@ data/raw/*
 !data/raw/.gitkeep
 data/uploads/*
 !data/uploads/.gitkeep
+data/app.db
+data/*.db-journal
 .DS_Store

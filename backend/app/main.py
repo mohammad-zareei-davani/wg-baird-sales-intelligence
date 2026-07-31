@@ -110,3 +110,8 @@ async def upload_data(file: UploadFile) -> dict:
         tmp_path.unlink(missing_ok=True)
 
     return {"status": "ok", "source": file.filename, "row_count": row_count}
+
+
+@app.get("/api/data/history")
+def data_history() -> dict:
+    return {"uploads": store.upload_history()}

@@ -1,16 +1,24 @@
-"""Loads the W&G Baird job/sales dataset from Excel into a clean DataFrame.
+"""Loads the W&G Baird job/sales dataset and keeps it persisted in SQLite.
 
 The dataset is a flat list of print jobs. Each row is one job, not one
 "order" in the retail sense — a customer can have several jobs booked on
 the same date. The analytics modules treat a distinct (customer, date)
 booking as an order event.
+
+Excel is the interchange format; SQLite (see app.db) is the store of
+record, so the active dataset survives an API restart instead of only
+living in process memory.
 """
 from __future__ import annotations
 
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
+from sqlalchemy import text
+
+from app.db import JOBS_COLUMNS, engine, init_db, jobs_row_count, record_upload, upload_history
 
 DEFAULT_DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "raw" / "sample_data.xlsx"
 SHEET_NAME = "Master Plain (Anon)"
@@ -58,12 +66,13 @@ NUMERIC_COLUMNS = [
     "quantity", "sell_price", "markup_pct", "va_amount", "va_per_24", "va_pct",
     "va_per_k", "rebate", "purchases", "press_hrs", "impressions", "handling",
     "labour", "paper", "labour_markup", "manual_adjustment", "markup_net",
-    "plates", "amount_invoiced",
+    "plates", "amount_invoiced", "year", "month", "week_no",
 ]
 DATE_COLUMNS = ["sales_in", "sales_out", "ship_date"]
 
 
 def load_dataframe(path: Path | str) -> pd.DataFrame:
+    """Read and clean a raw Excel export. Does not touch the database."""
     df = pd.read_excel(path, sheet_name=SHEET_NAME, engine="openpyxl")
     df = df.rename(columns=COLUMN_MAP)
 
@@ -84,18 +93,40 @@ def load_dataframe(path: Path | str) -> pd.DataFrame:
     return df.reset_index(drop=True)
 
 
+def _write_to_db(df: pd.DataFrame, source_name: str) -> None:
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM jobs"))
+        df[JOBS_COLUMNS].to_sql("jobs", conn, if_exists="append", index=False)
+    record_upload(source_name, len(df), datetime.now(timezone.utc).isoformat())
+
+
+def _read_from_db() -> pd.DataFrame:
+    return pd.read_sql("SELECT * FROM jobs", engine, parse_dates=DATE_COLUMNS)
+
+
 class DataStore:
     """Thread-safe holder for the currently active dataset.
 
-    Supports hot-swapping in a new file (the "dynamic system" requirement)
-    without restarting the API process.
+    Backed by SQLite: the first run ingests the sample file into the
+    database; subsequent runs (and uploads via the API) read from /
+    write to the database, so the active dataset survives a restart
+    without needing the original Excel file on disk.
     """
 
-    def __init__(self, initial_path: Path | str):
+    def __init__(self, default_path: Path | str):
         self._lock = threading.Lock()
-        self._path = Path(initial_path)
-        self._df = load_dataframe(self._path)
-        self._source_name = self._path.name
+        self._default_path = Path(default_path)
+        init_db()
+
+        if jobs_row_count() == 0:
+            df = load_dataframe(self._default_path)
+            _write_to_db(df, source_name=self._default_path.name)
+        else:
+            df = _read_from_db()
+
+        history = upload_history()
+        self._df = df
+        self._source_name = history[0]["source_name"] if history else self._default_path.name
 
     def get(self) -> pd.DataFrame:
         with self._lock:
@@ -103,9 +134,9 @@ class DataStore:
 
     def replace(self, path: Path | str, source_name: str) -> int:
         new_df = load_dataframe(path)
+        _write_to_db(new_df, source_name)
         with self._lock:
             self._df = new_df
-            self._path = Path(path)
             self._source_name = source_name
         return len(new_df)
 
@@ -113,6 +144,10 @@ class DataStore:
     def source_name(self) -> str:
         with self._lock:
             return self._source_name
+
+    @staticmethod
+    def upload_history() -> list[dict]:
+        return upload_history()
 
 
 store = DataStore(DEFAULT_DATA_PATH)

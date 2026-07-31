@@ -14,7 +14,9 @@ W&G Baird job-level sales export:
 
 The system re-analyses on demand: uploading a new `.xlsx` file in the same
 format (via the dashboard's upload button, or `POST /api/data/upload`)
-swaps the active dataset without restarting the API.
+swaps the active dataset without restarting the API. The active dataset is
+persisted to a SQLite database (`data/app.db`), not just held in memory, so
+it survives an API restart and every upload is logged with a timestamp.
 
 ## Run it
 
@@ -40,9 +42,23 @@ Open the URL Vite prints (defaults to `http://localhost:5173`) — it proxies
 
 ## Data
 
-`data/raw/sample_data.xlsx` is the sample dataset used as the default
-dataset on startup (excluded from git — see `.gitignore`). Column
+`data/raw/sample_data.xlsx` is the sample dataset used to seed the database
+the first time the API runs (excluded from git — see `.gitignore`). Column
 definitions are on the workbook's "Field Definitions" tab.
+
+`data/app.db` is a SQLite database (also excluded from git) holding two
+tables:
+
+- `jobs` — every row of the active dataset, in the cleaned/typed form the
+  analytics modules consume (indexed on `customer_id`, `sales_in`, `job_id`).
+- `dataset_uploads` — an append-only log of every file that has been loaded,
+  with row count and timestamp.
+
+On startup, if `jobs` is empty the API ingests `data/raw/sample_data.xlsx`
+into it; otherwise it reads the existing database as-is, so restarting the
+API does not require the original Excel file to still be on disk. Uploading
+a new file (`POST /api/data/upload`) deletes and repopulates `jobs` and adds
+a row to `dataset_uploads`.
 
 ## API
 
@@ -51,3 +67,4 @@ definitions are on the workbook's "Field Definitions" tab.
 - `GET /api/insights/reorder`
 - `GET /api/insights/churn`
 - `POST /api/data/upload` — multipart `file` field, replaces the active dataset
+- `GET /api/data/history` — log of every dataset uploaded so far
