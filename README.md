@@ -7,6 +7,208 @@ SQLite as the store of record.
 Every insight page leads with the commercial reading before showing any chart:
 what the number is, what it means, and what to do about it.
 
+## Architecture diagram
+
+End-to-end flow from Excel input to the dashboard UI. Each box lists the
+techniques, models or outputs used at that stage.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  INPUT                                                                      │
+│  Excel job export  ·  sheet "Master Plain (Anon)"                           │
+│  • First boot: data/raw/sample_data.xlsx                                    │
+│  • Later: sidebar upload or POST /api/data/upload                           │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  1. INGEST & CLEAN                              data_loader.load_dataframe  │
+│  • Read .xlsx (openpyxl)                                                    │
+│  • Rename columns to a stable schema (COLUMN_MAP)                           │
+│  • Coerce numeric and date fields                                           │
+│  • Strip whitespace on IDs / names                                          │
+│  • Drop rows missing sales_in or customer_id                                │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  2. PERSIST (SQLite)                                    data/app.db · db.py │
+│  • Replace active dataset in jobs table (full replace, not append)          │
+│  • Append-only log in dataset_uploads (source, row count, timestamp)        │
+│  • Indexes on customer_id, sales_in, job_id                                 │
+│  • Derived columns are NOT stored — recomputed on every read                │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  3. DERIVE / PREPROCESS                         data_loader.derive_columns  │
+│  • Currency conversion: Stg=1.0, Euro→GBP at BAIRD_EUR_GBP (default 0.86)   │
+│    → sell_price_base, va_amount_base, cost columns *_base                   │
+│  • Product canonicalisation: merge spelling variants on alphanumeric key    │
+│    → product_type_clean                                                     │
+│  • Lead time: ship_date − sales_in, clipped to [0, 180] days                │
+│  • Margin flags: is_below_cost, is_low_margin (VA% < 25%)                   │
+│  • Calendar: month_start for seasonality / ML panels                        │
+│  • Recency anchor: analytics use max(sales_in), not wall-clock today        │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  4. DATASTORE                                           DataStore (in RAM)  │
+│  • Thread-safe pandas DataFrame                                             │
+│  • version counter bumps on replace → invalidates ML caches                 │
+└─────────────────────────┬───────────────────────────┬───────────────────────┘
+                          │                           │
+                          ▼                           ▼
+┌──────────────────────────────────────┐  ┌───────────────────────────────────┐
+│  5a. ANALYTICS (rules / heuristics)  │  │  5b. MACHINE LEARNING             │
+│                                      │  │                                   │
+│  Customer value                      │  │  Quote Guard (price_model.py)     │
+│  · Rank by va_amount_base            │  │  · HistGradientBoostingRegressor  │
+│  · Pareto concentration (80% share)  │  │  · Target: log(sell_price_base)   │
+│  · Split by work / product / sector  │  │  · Features: qty, impressions,    │
+│                                      │  │    plates, press_hrs, paper/      │
+│  Reorder forecasting                 │  │    labour/purchases_base,         │
+│  · Mean gap between order dates      │  │    work_type, region, currency,   │
+│  · Status: Overdue / Due soon /      │  │    product_type_clean             │
+│    On track / Insufficient history   │  │  · Excluded: VA, markup, manadj   │
+│  · 30-day expected value             │  │    (outputs of pricing, not       │
+│                                      │  │     inputs)                       │
+│  Account retention (rules)           │  │  · Train/test split; MAE, MAPE,   │
+│  · Cadence-relative: At Risk 1.25×,  │  │    within 10% / 25%               │
+│    Dormant 2.5× own gap              │  │  · Flag if actual < expected by   │
+│  · Absolute fallbacks: 120 / 270 d   │  │    ≥ 20% (UNDERPRICED_THRESHOLD)  │
+│                                      │  │                                   │
+│  Pricing integrity                   │  │  Churn risk (churn_model.py)      │
+│  · Override / discount / uplift      │  │  · HistGradientBoostingClassifier │
+│  · Below-cost and low-margin jobs    │  │  · Unit: customer-month panel     │
+│  · By customer, rep, work type       │  │  · Label: ordered within 60 days? │
+│                                      │  │  · Features from history before   │
+│  Seasonality                         │  │    observation date only          │
+│  · Monthly sales & press hours       │  │    (no leakage)                   │
+│  · Seasonal index vs baseline        │  │  · Time-based train/test split    │
+│  · Seasonal-naive + growth forecast  │  │    (not random)                   │
+│                                      │  │  · Benchmark: overdue-gap AUC     │
+│  Delivery                            │  │  · Bands: High / Medium / Low     │
+│  · Median & P90 lead time            │  │                                   │
+│  · By work type / product; monthly   │  │                                   │
+│                                      │  │                                   │
+│  Repeat / reprint business           │  │                                   │
+│  · Title cycles; due-for-reprint     │  │                                   │
+│  · Min cycle 30 days (split orders)  │  │                                   │
+└──────────────────┬───────────────────┘  └─────────────────┬─────────────────┘
+                   │                                        │
+                   └──────────────────┬─────────────────────┘
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  6. NARRATIVE BRIEFS                               analytics/narrative.py   │
+│  • Deterministic templates (not an LLM)                                     │
+│  • Shape: title · 3 metrics · hero finding · breakdown table · actions      │
+│  • Figures formatted server-side so prose and tables cannot disagree        │
+│  • Executive summary picks five findings: pricing → value → repeat →        │
+│    churn → seasonality                                                      │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  7. API                                              FastAPI · main.py :8000│
+│  • GET /api/summary, /insights/*, /ml/*, /executive-summary                 │
+│  • Each insight returns raw figures + brief JSON                            │
+│  • POST /api/data/upload replaces dataset and retrains models               │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  8. FRONTEND                                         React + Vite :5173     │
+│  • Vite proxies /api → :8000                                                │
+│  • DashboardDataContext: parallel fetch of all endpoints on load / upload   │
+│  • AppLayout: ink sidebar, meta bar (source · jobs · date range · currency) │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  9. UI OUTPUT                                                               │
+│  Brief anatomy (every insight page):                                        │
+│    metrics → key finding → breakdown table → numbered actions               │
+│  Then Supporting Charts (Recharts): bars, donuts, seasonal lines, tables    │
+│  Overview: executive findings + currency split                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Upload loop:** replace `jobs` → bump DataStore version → invalidate ML cache → retrain → frontend `reload()`.
+
+**Restart loop:** if `jobs` is non-empty, skip Excel → read SQLite → derive → stages 4–9.
+
+## How the app works
+
+Data enters as an Excel export (or dashboard upload), is cleaned and stored in
+SQLite, then enriched in memory. Seven analytics modules and two ML models run
+over that dataset. Deterministic narrative templates turn verified figures into
+a `brief` object. FastAPI serves those payloads; the React app loads them once
+and renders brief-first pages with supporting charts underneath.
+
+## Application structure
+
+```
+wg-baird-sales-intelligence/
+├── README.md
+├── data/
+│   ├── raw/                        # sample_data.xlsx (seed; not in git)
+│   ├── uploads/                    # upload scratch (not in git)
+│   └── app.db                      # SQLite store of record (not in git)
+├── backend/
+│   ├── requirements.txt
+│   └── app/
+│       ├── main.py                 # FastAPI routes
+│       ├── config.py               # FX rate and thresholds
+│       ├── data_loader.py          # Excel → clean → derive → DataStore
+│       ├── db.py                   # SQLite schema and helpers
+│       ├── analytics/
+│       │   ├── customer_value.py
+│       │   ├── reorder.py
+│       │   ├── churn.py
+│       │   ├── pricing.py
+│       │   ├── seasonality.py
+│       │   ├── delivery.py
+│       │   ├── repeat_business.py
+│       │   └── narrative.py        # brief templates + executive summary
+│       └── ml/
+│           ├── price_model.py      # Quote Guard
+│           └── churn_model.py      # Retention risk
+└── frontend/
+    ├── package.json
+    ├── vite.config.ts              # proxies /api → :8000
+    ├── tailwind.config.js
+    └── src/
+        ├── App.tsx                 # provider + routes
+        ├── api/                    # typed client + response types
+        ├── data/DashboardDataContext.tsx
+        ├── layout/AppLayout.tsx    # sidebar, meta bar, outlet
+        ├── components/
+        │   ├── brief/Brief.tsx     # shared page anatomy
+        │   ├── charts/             # Recharts wrappers
+        │   ├── Panel.tsx
+        │   └── UploadControl.tsx
+        ├── pages/                  # one page per insight
+        ├── theme/colors.ts
+        └── format.ts
+```
+
+### Page → API mapping
+
+| Route | Page | Backend |
+| --- | --- | --- |
+| `/` | Executive Briefing | `GET /api/summary`, `GET /api/executive-summary` |
+| `/customer-value` | Customer Value | `GET /api/insights/customer-value` |
+| `/repeat-business` | Recurring Revenue | `GET /api/insights/repeat-business` |
+| `/reorder` | Reorder Forecasting | `GET /api/insights/reorder` |
+| `/churn` | Account Retention | `GET /api/insights/churn` |
+| `/pricing` | Pricing Integrity | `GET /api/insights/pricing` |
+| `/seasonality` | Demand & Capacity | `GET /api/insights/seasonality` |
+| `/delivery` | Production Turnaround | `GET /api/insights/delivery` |
+| `/quote-guard` | Quote Intelligence | `GET /api/ml/quote-guard` |
+| `/churn-risk` | Retention Risk | `GET /api/ml/churn-risk` |
+
 ## Pages
 
 | Page | Question it answers |
@@ -24,7 +226,7 @@ what the number is, what it means, and what to do about it.
 
 ## How each page is structured
 
-Every page follows the same shape, so a reader learns the format once:
+Every insight page follows the same shape, so a reader learns the format once:
 
 1. **Three headline figures**, each with a unit so it reads on its own.
 2. **One hero number** with a three-sentence read, enough to take the point
