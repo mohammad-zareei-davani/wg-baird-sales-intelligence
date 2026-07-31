@@ -112,7 +112,7 @@ def seasonality_analysis(df: pd.DataFrame, horizon: int = 6) -> dict:
     peak = sales_index.loc[sales_index["seasonal_index"].idxmax()]
     trough = sales_index.loc[sales_index["seasonal_index"].idxmin()]
 
-    # Which industries drive the peak month — the schoolbook programme
+    # Which industries drive the peak month. The schoolbook programme
     # should show up here if the seasonality is what the business believes.
     peak_month_num = int(peak["month_num"])
     peak_mix = (

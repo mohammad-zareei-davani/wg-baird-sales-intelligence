@@ -1,7 +1,7 @@
 """Insight 1: Most valuable customers and types of work.
 
 Ranks customers by Value Added rather than raw sell price, because VA is
-what the business keeps after paper, press and bought-in costs — it is the
+what the business keeps after paper, press and bought-in costs, so it is the
 better proxy for how much a relationship is actually worth. All money is
 converted to the base reporting currency first (see app.config).
 """

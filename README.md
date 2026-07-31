@@ -4,8 +4,8 @@ A dynamic analytics platform over W&G Baird's job-level sales data. FastAPI +
 pandas + scikit-learn on the backend, React/TypeScript + Tailwind on the front,
 SQLite as the store of record.
 
-Every insight page leads with the commercial reading — what the number is, what
-it means, and what to do about it — before showing any chart.
+Every insight page leads with the commercial reading before showing any chart:
+what the number is, what it means, and what to do about it.
 
 ## Pages
 
@@ -27,17 +27,17 @@ it means, and what to do about it — before showing any chart.
 Every page follows the same shape, so a reader learns the format once:
 
 1. **Three headline figures**, each with a unit so it reads on its own.
-2. **One hero number** with a three-sentence read — enough to take the point
+2. **One hero number** with a three-sentence read, enough to take the point
    without going further.
 3. **A breakdown table** where every row carries a plain-English description of
    what that row means.
 4. **Numbered actions**, each tagged with what it costs (free / low cost /
    value at stake) and explained concretely.
-5. **Supporting charts** underneath — evidence for the argument, not the
-   argument itself.
+5. **Supporting charts** underneath: evidence for the argument, not the argument
+   itself.
 
-The interface supports light and dark mode, following the system setting until
-the user chooses explicitly.
+The interface is a single light theme, tuned for on-screen reading and for
+projection in a boardroom.
 
 ## Two findings worth knowing before reading the numbers
 
@@ -56,8 +56,9 @@ Both models report honest held-out performance, shown in the UI beside the
 predictions:
 
 - **Quote Guard** predicts price from specification and input costs only. Value
-  added, markup and the manual adjustment are excluded — they are consequences
-  of the pricing decision, not inputs to it. Median error ~6.7% on unseen jobs.
+  added, markup and the manual adjustment are excluded, because they are
+  consequences of the pricing decision rather than inputs to it. Median error is
+  about 6.7% on unseen jobs.
 - **Churn risk** is trained on a customer-month panel (features computed only
   from history before each observation date) and split by time rather than at
   random. It is scored against a naive "how overdue are they" benchmark; with
@@ -67,7 +68,7 @@ The written briefing on each page is generated deterministically from the
 computed figures rather than by a language model. The numbers quoted have to
 reconcile exactly with the table beside them, the wording has to be identical on
 every load of the same data, and it has to work with no external service and no
-per-query cost — a template interpolating verified figures meets all three.
+per-query cost. A template interpolating verified figures meets all three.
 
 ## Run it
 
@@ -94,8 +95,8 @@ to port 8000. On macOS/Linux use `.venv/bin/` in place of `.venv/Scripts/`.
 `data/raw/sample_data.xlsx` seeds the database on first run. `data/app.db`
 (SQLite) is the store of record and holds:
 
-- `jobs` — the active dataset, indexed on customer, booking date and title
-- `dataset_uploads` — an append-only log of every file loaded, with row count
+- `jobs`, the active dataset, indexed on customer, booking date and title
+- `dataset_uploads`, an append-only log of every file loaded, with row count
   and timestamp
 
 Restarting the API reads from the database, so the original Excel file does not
@@ -123,10 +124,10 @@ committed to git.
 | `POST /api/data/upload` | Replace the active dataset (multipart `file`) |
 | `GET /api/data/history` | Log of datasets loaded |
 
-Every insight endpoint includes a `brief` object alongside the raw figures —
-`title`, `metrics`, `hero`, `breakdown` and `actions` — which is what the
-dashboard renders. The numbers in the brief are formatted server-side so the
-prose and the tables can never disagree.
+Every insight endpoint includes a `brief` object alongside the raw figures. It
+carries `title`, `metrics`, `hero`, `breakdown` and `actions`, and is what the
+dashboard renders. The numbers inside it are formatted server-side, so the prose
+and the tables can never disagree.
 
 ## Assumptions worth challenging
 

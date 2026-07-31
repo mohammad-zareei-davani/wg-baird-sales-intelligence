@@ -8,7 +8,7 @@ export function ChurnPage() {
   const { churn } = useLoadedDashboardData();
 
   return (
-    <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
+    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
       <PageTitle eyebrow="Account Retention" title={churn.brief.title} />
       <Brief brief={churn.brief} />
 
@@ -19,7 +19,7 @@ export function ChurnPage() {
 
         <Panel
           title="Follow-up list"
-          subtitle="At-risk and dormant accounts, ranked by lifetime value — the highest-value relationships to re-engage first"
+          subtitle="At-risk and dormant accounts, ranked by lifetime value, so the highest-value relationships come first"
         >
           <FollowUpTable rows={churn.follow_up_opportunities} />
         </Panel>

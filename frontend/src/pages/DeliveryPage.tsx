@@ -5,14 +5,14 @@ import { HorizontalBarChart } from "../components/charts/HorizontalBarChart";
 import { LeadTimeTrendChart } from "../components/charts/LeadTimeTrendChart";
 import { formatCurrency, formatNumber } from "../format";
 
-const th = "px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted";
-const td = "whitespace-nowrap border-t border-line-grid px-3 py-2 text-ink-primary";
+const th = "whitespace-nowrap border-b border-edge px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-label text-ink-muted";
+const td = "whitespace-nowrap border-t border-edge px-4 py-2.5 text-ink-primary";
 
 export function DeliveryPage() {
   const { delivery } = useLoadedDashboardData();
 
   return (
-    <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
+    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
       <PageTitle eyebrow="Production Turnaround" title={delivery.brief.title} />
       <Brief brief={delivery.brief} />
 
@@ -45,7 +45,7 @@ export function DeliveryPage() {
 
         <Panel
           title="Jobs that ran far beyond their product's norm"
-          subtitle="Ranked by how far past the usual turnaround for that same product they went — this is where recoverable time sits"
+          subtitle="Ranked by how far past the usual turnaround for that same product they went. This is where recoverable time sits"
         >
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-[13px]">

@@ -1,9 +1,15 @@
-import { NavLink, Outlet } from "react-router-dom";
-import { ThemeToggle } from "../components/ThemeToggle";
+import { useEffect } from "react";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { UploadControl } from "../components/UploadControl";
 import { useDashboardData } from "../data/DashboardDataContext";
 
-const NAV_GROUPS: { heading: string | null; items: { to: string; label: string; end?: boolean }[] }[] = [
+interface NavItem {
+  to: string;
+  label: string;
+  end?: boolean;
+}
+
+const NAV_GROUPS: { heading: string | null; items: NavItem[] }[] = [
   { heading: null, items: [{ to: "/", label: "Executive Briefing", end: true }] },
   {
     heading: "Commercial",
@@ -31,27 +37,39 @@ const NAV_GROUPS: { heading: string | null; items: { to: string; label: string; 
   },
 ];
 
+const ALL_ITEMS = NAV_GROUPS.flatMap((g) =>
+  g.items.map((item) => ({ ...item, group: g.heading })),
+);
+
 export function AppLayout() {
   const { data, error, loading, reload } = useDashboardData();
+  const { pathname } = useLocation();
+  const current = ALL_ITEMS.find((i) => i.to === pathname);
+
+  // Without this, arriving on a new page keeps the previous page's scroll
+  // position and drops the reader into the middle of the brief.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
-      <aside className="flex w-full flex-shrink-0 flex-col border-b border-edge/10 bg-raised p-4 md:sticky md:top-0 md:h-screen md:w-[252px] md:overflow-y-auto md:border-b-0 md:border-r">
-        <div className="mb-3 flex items-center gap-2.5 border-b border-line-grid px-2 pb-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-series-1 text-xs font-bold tracking-wide text-white">
+    <div className="flex min-h-screen flex-col lg:flex-row">
+      <aside className="flex w-full flex-shrink-0 flex-col border-b border-edge bg-surface lg:sticky lg:top-0 lg:h-screen lg:w-[236px] lg:border-b-0 lg:border-r">
+        <div className="flex items-center gap-2.5 px-5 py-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-[11px] font-bold tracking-wide text-white">
             WGB
           </div>
-          <div>
-            <div className="text-sm font-bold">W&amp;G Baird</div>
-            <div className="text-xs text-ink-muted">Sales Intelligence</div>
+          <div className="leading-tight">
+            <div className="text-[13px] font-semibold text-ink-primary">W&amp;G Baird</div>
+            <div className="text-[11px] text-ink-muted">Sales Intelligence</div>
           </div>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-4">
+        <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 pb-4">
           {NAV_GROUPS.map((group, gi) => (
-            <div key={group.heading ?? `group-${gi}`} className="flex flex-col gap-0.5">
+            <div key={group.heading ?? `g${gi}`} className="flex flex-col gap-px">
               {group.heading && (
-                <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-ink-muted">
+                <div className="px-2.5 pb-1.5 text-[10px] font-semibold uppercase tracking-label text-ink-muted">
                   {group.heading}
                 </div>
               )}
@@ -61,9 +79,9 @@ export function AppLayout() {
                   to={item.to}
                   end={item.end}
                   className={({ isActive }) =>
-                    `rounded-lg px-3 py-2 text-[13px] ${
+                    `relative rounded-md px-2.5 py-[7px] text-[13px] transition-colors ${
                       isActive
-                        ? "bg-accentSoft font-semibold text-series-1"
+                        ? "bg-accentSoft font-semibold text-accentStrong"
                         : "text-ink-secondary hover:bg-page hover:text-ink-primary"
                     }`
                   }
@@ -75,32 +93,47 @@ export function AppLayout() {
           ))}
         </nav>
 
-        <div className="mt-4 flex flex-col gap-2.5 border-t border-line-grid pt-4">
-          <ThemeToggle />
+        <div className="border-t border-edge px-4 py-3.5">
           <UploadControl onUploaded={reload} />
-          {data && (
-            <div className="text-[11px] leading-relaxed text-ink-muted">
-              <div>Source: {data.summary.source}</div>
-              <div>
-                {data.summary.row_count.toLocaleString("en-GB")} jobs · reported in{" "}
-                {data.summary.base_currency}
-              </div>
-            </div>
-          )}
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 px-5 py-8 md:px-10">
-        {error && (
-          <div className="mb-5 max-w-[1080px] rounded-lg bg-status-criticalBg px-4 py-3 text-sm text-status-criticalText">
-            {error}
-          </div>
-        )}
-        {loading && !data && (
-          <div className="text-sm text-ink-muted">Loading dashboard — training models on first load…</div>
-        )}
-        {data && <Outlet />}
-      </main>
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Keeps the dataset the figures came from visible on every page,
+            without it, a screenshot of any single page is unattributable. */}
+        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-edge bg-surface/90 px-6 py-2.5 backdrop-blur lg:px-9">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[12px]">
+            {current?.group && (
+              <>
+                <span className="text-ink-muted">{current.group}</span>
+                <span className="text-ink-muted/60">/</span>
+              </>
+            )}
+            <span className="font-medium text-ink-secondary">{current?.label ?? "Dashboard"}</span>
+          </nav>
+          {data && (
+            <span className="ml-auto text-[11.5px] text-ink-muted">
+              {data.summary.source} · {data.summary.row_count.toLocaleString("en-GB")} jobs ·{" "}
+              {data.summary.date_range.from} to {data.summary.date_range.to} · figures in{" "}
+              {data.summary.base_currency}
+            </span>
+          )}
+        </div>
+
+        <main className="flex-1 px-6 py-7 lg:px-9 lg:py-9">
+          {error && (
+            <div className="mx-auto mb-5 max-w-[1120px] rounded-lg border border-status-critical/25 bg-status-criticalBg px-4 py-3 text-[13px] text-status-criticalText">
+              {error}
+            </div>
+          )}
+          {loading && !data && (
+            <div className="text-[13px] text-ink-muted">
+              Loading dashboard. Training models on first load…
+            </div>
+          )}
+          {data && <Outlet />}
+        </main>
+      </div>
     </div>
   );
 }

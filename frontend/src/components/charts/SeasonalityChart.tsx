@@ -3,7 +3,7 @@ import {
 } from "recharts";
 import type { ForecastRow, MonthlyRow } from "../../api/types";
 import { formatCurrencyCompact } from "../../format";
-import { tooltipStyle, useChartTheme } from "../../theme/colors";
+import { CHART, SERIES, tooltipStyle } from "../../theme/colors";
 
 const shortMonth = (iso: string) => {
   const d = new Date(iso);
@@ -22,8 +22,6 @@ export function SeasonalityChart({
   monthly: MonthlyRow[];
   forecast: ForecastRow[];
 }) {
-  const theme = useChartTheme();
-
   const actual = monthly.map((m) => ({
     label: shortMonth(m.month_start),
     actual: m.sell_price,
@@ -43,34 +41,36 @@ export function SeasonalityChart({
     forecast: f.forecast,
   }));
 
-  const data = [...actual, ...projected];
-
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data} margin={{ top: 8, right: 16, bottom: 4, left: 4 }}>
-        <CartesianGrid stroke={theme.gridline} vertical={false} />
+    <ResponsiveContainer width="100%" height={290}>
+      <LineChart data={[...actual, ...projected]} margin={{ top: 8, right: 16, bottom: 4, left: 4 }}>
+        <CartesianGrid stroke={CHART.gridline} vertical={false} />
         <XAxis
           dataKey="label"
-          stroke={theme.axis}
-          tick={{ fill: theme.textMuted, fontSize: 11 }}
+          stroke={CHART.axis}
+          tickLine={false}
+          tick={{ fill: CHART.textMuted, fontSize: 11 }}
           interval="preserveStartEnd"
-          minTickGap={24}
+          minTickGap={26}
         />
         <YAxis
           tickFormatter={(v: number) => formatCurrencyCompact(v)}
-          stroke={theme.axis}
-          tick={{ fill: theme.textMuted, fontSize: 11 }}
+          stroke={CHART.axis}
+          tickLine={false}
+          tick={{ fill: CHART.textMuted, fontSize: 11 }}
         />
         <Tooltip
-          contentStyle={tooltipStyle(theme)}
+          contentStyle={tooltipStyle}
           formatter={(value: number, name) => [formatCurrencyCompact(value), name]}
         />
-        <Legend formatter={(v) => <span style={{ color: theme.textSecondary, fontSize: 12 }}>{v}</span>} />
+        <Legend
+          formatter={(v) => <span style={{ color: CHART.textSecondary, fontSize: 12 }}>{v}</span>}
+        />
         <Line
           type="monotone"
           dataKey="actual"
           name="Booked"
-          stroke={theme.series[0]}
+          stroke={SERIES[0]}
           strokeWidth={2}
           dot={false}
           connectNulls={false}
@@ -79,10 +79,10 @@ export function SeasonalityChart({
           type="monotone"
           dataKey="forecast"
           name="Projected"
-          stroke={theme.series[1]}
+          stroke={SERIES[1]}
           strokeWidth={2}
           strokeDasharray="5 4"
-          dot={{ r: 3 }}
+          dot={{ r: 2.5 }}
           connectNulls={false}
         />
       </LineChart>

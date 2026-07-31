@@ -1,7 +1,7 @@
 """Insight 3: Customer churn / dormancy and follow-up opportunities.
 
 A customer's own order history sets the baseline for what "normal" looks
-like for them — a customer who orders every 2 weeks going quiet for 45
+like for them. A customer who orders every 2 weeks going quiet for 45
 days is a much stronger churn signal than the same gap for a customer who
 orders twice a year. So dormancy is scored relative to each customer's own
 historical cadence, not a single global cutoff. Customers with only one

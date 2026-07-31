@@ -4,15 +4,15 @@ import { Brief, PageTitle, SupportingCharts } from "../components/brief/Brief";
 import { HorizontalBarChart } from "../components/charts/HorizontalBarChart";
 import { formatCurrency, formatCurrencyCompact, formatNumber } from "../format";
 
-const th = "px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted";
-const td = "whitespace-nowrap border-t border-line-grid px-3 py-2 text-ink-primary";
+const th = "whitespace-nowrap border-b border-edge px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-label text-ink-muted";
+const td = "whitespace-nowrap border-t border-edge px-4 py-2.5 text-ink-primary";
 
 export function RepeatBusinessPage() {
   const { repeatBusiness } = useLoadedDashboardData();
   const s = repeatBusiness.summary;
 
   return (
-    <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
+    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
       <PageTitle eyebrow="Recurring Revenue" title={repeatBusiness.brief.title} />
       <Brief brief={repeatBusiness.brief} />
 
@@ -50,7 +50,7 @@ export function RepeatBusinessPage() {
                 ))}
                 {repeatBusiness.due_for_reprint.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="border-t border-line-grid px-3 py-5 text-center text-ink-muted">
+                    <td colSpan={7} className="border-t border-edge px-4 py-6 text-center text-ink-muted">
                       No titles are currently overdue their reprint cycle.
                     </td>
                   </tr>

@@ -1,49 +1,50 @@
-import { useMemo } from "react";
-import { useTheme } from "./ThemeContext";
-
 /**
- * Recharts takes colours as literal strings rather than CSS variables, so the
- * chart palette is mirrored here in JS and selected by the active theme.
- * These values are the same steps declared in index.css.
+ * Chart palette. Recharts takes colours as literal strings rather than CSS
+ * classes, so the values the charts use are declared here and mirror the
+ * tokens in tailwind.config.js.
+ *
+ * The eight series hues are ordered so that adjacent pairs stay separable for
+ * colour-blind readers. The ordering is the safety mechanism, not decoration,
+ * so add to the end rather than reshuffling.
  */
-const LIGHT = {
-  series: ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"],
-  gridline: "#e1e0d9",
-  axis: "#c3c2b7",
-  textMuted: "#898781",
-  textSecondary: "#52514e",
-  textPrimary: "#0b0b0b",
-  surfaceRaised: "#ffffff",
-  border: "rgba(11, 11, 11, 0.12)",
-  status: { good: "#0ca30c", warning: "#fab219", serious: "#ec835a", critical: "#d03b3b" },
+export const SERIES = [
+  "#2a78d6", // blue
+  "#eb6834", // orange
+  "#1baf7a", // aqua
+  "#eda100", // yellow
+  "#e87ba4", // magenta
+  "#008300", // green
+  "#4a3aa7", // violet
+  "#e34948", // red
+] as const;
+
+export const STATUS = {
+  good: "#0ca30c",
+  warning: "#fab219",
+  serious: "#ec835a",
+  critical: "#d03b3b",
 } as const;
 
-const DARK = {
-  series: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"],
-  gridline: "#2c2c2a",
-  axis: "#383835",
-  textMuted: "#898781",
-  textSecondary: "#c3c2b7",
-  textPrimary: "#ffffff",
-  surfaceRaised: "#232322",
-  border: "rgba(255, 255, 255, 0.14)",
-  status: { good: "#0ca30c", warning: "#fab219", serious: "#ec835a", critical: "#d03b3b" },
+export const CHART = {
+  gridline: "#eceef2",
+  axis: "#cfd3db",
+  textMuted: "#8a91a0",
+  textSecondary: "#475467",
+  textPrimary: "#101828",
+  surface: "#ffffff",
+  border: "#e6e8ec",
 } as const;
 
-export type ChartTheme = typeof LIGHT;
+/** Shared tooltip styling so every chart's hover card matches. */
+export const tooltipStyle = {
+  background: CHART.surface,
+  border: `1px solid ${CHART.border}`,
+  borderRadius: 8,
+  boxShadow: "0 4px 12px rgba(16, 24, 40, 0.08)",
+  color: CHART.textPrimary,
+  fontSize: 12.5,
+  padding: "8px 10px",
+} as const;
 
-export function useChartTheme(): ChartTheme {
-  const { mode } = useTheme();
-  return useMemo(() => (mode === "dark" ? (DARK as unknown as ChartTheme) : LIGHT), [mode]);
-}
-
-/** Shared tooltip styling so every chart's hover card matches the surface. */
-export function tooltipStyle(theme: ChartTheme) {
-  return {
-    background: theme.surfaceRaised,
-    border: `1px solid ${theme.border}`,
-    borderRadius: 8,
-    color: theme.textPrimary,
-    fontSize: 13,
-  };
-}
+/** Faint wash behind the hovered bar/column. */
+export const hoverCursor = { fill: CHART.gridline, fillOpacity: 0.7 } as const;

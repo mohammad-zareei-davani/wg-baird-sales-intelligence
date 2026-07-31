@@ -2,13 +2,13 @@
 
 The estimating system produces an automated price, which an estimator can
 then override before the quote goes out ("manadj" in the source data).
-That override is where commercial judgement enters the process — and where
+That override is where commercial judgement enters the process, and where
 margin quietly leaks if it is not measured.
 
 This module answers three questions a board would actually ask:
   1. How often is the automated price overridden, and by how much?
   2. Which work are we selling below cost, and who does it concentrate on?
-  3. Where does discounting cluster — by account, by rep, by type of work?
+  3. Where does discounting cluster: by account, by rep, by type of work?
 
 Note on the below-cost jobs: negative value added can mean genuinely
 loss-making work, but it can also mean a credit note or a mis-booked

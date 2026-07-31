@@ -1,7 +1,7 @@
 """Loads the W&G Baird job/sales dataset and keeps it persisted in SQLite.
 
 The dataset is a flat list of print jobs. Each row is one job, not one
-"order" in the retail sense — a customer can have several jobs booked on
+"order" in the retail sense. A customer can have several jobs booked on
 the same date. The analytics modules treat a distinct (customer, date)
 booking as an order event.
 

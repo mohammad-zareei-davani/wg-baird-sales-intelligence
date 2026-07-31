@@ -4,14 +4,14 @@ import { Brief, PageTitle, SupportingCharts } from "../components/brief/Brief";
 import { HorizontalBarChart } from "../components/charts/HorizontalBarChart";
 import { formatCurrency, formatCurrencyCompact, formatNumber, formatPct } from "../format";
 
-const th = "px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted";
-const td = "whitespace-nowrap border-t border-line-grid px-3 py-2 text-ink-primary";
+const th = "whitespace-nowrap border-b border-edge px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-label text-ink-muted";
+const td = "whitespace-nowrap border-t border-edge px-4 py-2.5 text-ink-primary";
 
 export function PricingPage() {
   const { pricing } = useLoadedDashboardData();
 
   return (
-    <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
+    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
       <PageTitle eyebrow="Pricing Integrity" title={pricing.brief.title} />
       <Brief brief={pricing.brief} />
 
@@ -34,7 +34,7 @@ export function PricingPage() {
 
           <Panel
             title="Discounting by sales rep"
-            subtitle="A coaching conversation, not a league table — territories differ in size and mix"
+            subtitle="A coaching conversation, not a league table, since territories differ in size and mix"
           >
             <HorizontalBarChart
               data={[...pricing.discount_by_rep]

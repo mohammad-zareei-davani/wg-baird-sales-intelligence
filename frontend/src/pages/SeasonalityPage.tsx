@@ -11,7 +11,7 @@ export function SeasonalityPage() {
   const s = seasonality.summary;
 
   return (
-    <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
+    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
       <PageTitle eyebrow="Demand & Capacity Planning" title={seasonality.brief.title} />
       <Brief brief={seasonality.brief} />
 
@@ -25,14 +25,14 @@ export function SeasonalityPage() {
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <Panel
-            title="The shape of the year — sales"
+            title="The shape of the year: sales"
             subtitle="Each month against an average month (100)"
           >
             <SeasonalIndexChart data={seasonality.sales_seasonal_index} />
           </Panel>
 
           <Panel
-            title="The shape of the year — press hours"
+            title="The shape of the year: press hours"
             subtitle="The same view in production terms, which is what has to be staffed"
           >
             <SeasonalIndexChart data={seasonality.press_seasonal_index} />

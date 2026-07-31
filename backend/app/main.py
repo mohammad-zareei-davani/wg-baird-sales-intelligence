@@ -45,7 +45,7 @@ def _as_of() -> pd.Timestamp:
     """Reference "today" for recency-based analytics.
 
     The dataset is a point-in-time extract, so we anchor to its most recent
-    booking date rather than wall-clock time — otherwise every customer
+    booking date rather than wall-clock time, because otherwise every customer
     looks dormant purely because the extract is a few months old, not
     because they actually stopped ordering.
     """

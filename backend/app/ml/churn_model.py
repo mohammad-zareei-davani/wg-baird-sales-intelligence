@@ -159,7 +159,7 @@ def train_churn_model(df: pd.DataFrame) -> dict:
     base_rate = float(test["will_order"].mean())
 
     # Score every customer as at the latest date in the data. These rows are
-    # deliberately unlabelled — they are the genuine forward prediction.
+    # deliberately unlabelled: they are the genuine forward prediction.
     current = panel[panel["observation_date"] == panel["observation_date"].max()].copy()
     if current.empty:
         current_risk: list[dict] = []

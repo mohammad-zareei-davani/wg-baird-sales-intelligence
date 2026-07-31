@@ -1,6 +1,6 @@
 """Insight 7: Repeat and reprint work.
 
-The same job title reappears for the same customer across the dataset —
+The same job title reappears for the same customer across the dataset.
 these are reprints of work already set up and run before. For a printer
 this is the most valuable revenue there is: the origination is already
 done, the specification is known, and the reorder is predictable.

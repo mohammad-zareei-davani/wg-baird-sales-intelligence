@@ -3,14 +3,14 @@ import { Panel } from "../components/Panel";
 import { Brief, PageTitle, SupportingCharts } from "../components/brief/Brief";
 import { formatCurrency, formatNumber } from "../format";
 
-const th = "px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted";
-const td = "whitespace-nowrap border-t border-line-grid px-3 py-2 text-ink-primary";
+const th = "whitespace-nowrap border-b border-edge px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-label text-ink-muted";
+const td = "whitespace-nowrap border-t border-edge px-4 py-2.5 text-ink-primary";
 
 export function QuoteGuardPage() {
   const { quoteGuard } = useLoadedDashboardData();
 
   return (
-    <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
+    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
       <PageTitle eyebrow="Quote Intelligence" title={quoteGuard.brief.title} />
       <Brief brief={quoteGuard.brief} />
 
@@ -18,11 +18,11 @@ export function QuoteGuardPage() {
         <SupportingCharts>
           <Panel
             title="What the model looks at"
-            subtitle="Value added, markup and the manual price adjustment are deliberately excluded — they are consequences of the pricing decision, not inputs to it. Including them would let the model reconstruct the answer and report an accuracy it has not earned."
+            subtitle="Value added, markup and the manual price adjustment are deliberately excluded, because they are consequences of the pricing decision, not inputs to it. Including them would let the model reconstruct the answer and report an accuracy it has not earned."
           >
             <div className="flex flex-wrap gap-1.5">
               {(quoteGuard.features_used ?? []).map((f) => (
-                <span key={f} className="rounded-full bg-page px-2.5 py-1 text-[11px] text-ink-secondary">
+                <span key={f} className="rounded-md border border-edge bg-page px-2.5 py-1 text-[11px] text-ink-secondary">
                   {f}
                 </span>
               ))}

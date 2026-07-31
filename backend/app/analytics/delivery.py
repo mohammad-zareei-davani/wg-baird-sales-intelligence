@@ -5,8 +5,8 @@ ships. Speed is one of the things customers actually notice, so this
 tracks how long work takes by type, whether it is improving or slipping,
 and which work sits in the long tail.
 
-Turnaround varies legitimately by product — a 30,000-copy educational book
-is not a business-card run — so performance is judged per product against
+Turnaround varies legitimately by product. A 30,000-copy educational book
+is not a business-card run, so performance is judged per product against
 that product's own typical turnaround rather than one company-wide target.
 """
 from __future__ import annotations

@@ -2,8 +2,8 @@ import type { ReorderCustomer } from "../api/types";
 import { formatCurrency } from "../format";
 import { StatusBadge } from "./StatusBadge";
 
-const th = "px-2.5 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted";
-const td = "whitespace-nowrap border-t border-line-grid px-2.5 py-2 text-ink-primary";
+const th = "whitespace-nowrap border-b border-edge px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-label text-ink-muted";
+const td = "whitespace-nowrap border-t border-edge px-4 py-2.5 text-ink-primary";
 
 export function ReorderTable({ rows }: { rows: ReorderCustomer[] }) {
   return (
@@ -25,10 +25,10 @@ export function ReorderTable({ rows }: { rows: ReorderCustomer[] }) {
             <tr key={r.customer_id}>
               <td className={td}>{r.customer_name}</td>
               <td className={td}>{r.order_count}</td>
-              <td className={td}>{r.avg_interval_days != null ? `${r.avg_interval_days}d (${r.regularity})` : "—"}</td>
+              <td className={td}>{r.avg_interval_days != null ? `${r.avg_interval_days}d (${r.regularity})` : "n/a"}</td>
               <td className={td}>{r.last_order_date}</td>
               <td className={td}>
-                {r.predicted_next_order_date ?? "—"}
+                {r.predicted_next_order_date ?? "n/a"}
                 {r.days_until_predicted != null && (
                   <span className="text-xs text-ink-muted">
                     {" "}
@@ -36,7 +36,7 @@ export function ReorderTable({ rows }: { rows: ReorderCustomer[] }) {
                   </span>
                 )}
               </td>
-              <td className={td}>{r.predicted_next_order_value != null ? formatCurrency(r.predicted_next_order_value) : "—"}</td>
+              <td className={td}>{r.predicted_next_order_value != null ? formatCurrency(r.predicted_next_order_value) : "n/a"}</td>
               <td className={td}>
                 <StatusBadge status={r.status} />
               </td>

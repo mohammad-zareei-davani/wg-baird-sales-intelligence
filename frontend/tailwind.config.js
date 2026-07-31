@@ -1,57 +1,68 @@
 /** @type {import('tailwindcss').Config} */
-
-// Colours resolve through CSS custom properties so a single `dark` class on
-// <html> reskins the whole app — every existing utility class keeps working
-// in both modes without needing a `dark:` variant on each element.
-const withAlpha = (variable) => `rgb(var(${variable}) / <alpha-value>)`;
-
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
-  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        page: withAlpha("--c-page"),
-        surface: withAlpha("--c-surface"),
-        raised: withAlpha("--c-raised"),
-        accentSoft: withAlpha("--c-accent-soft"),
+        // Neutral base. A faintly cool grey reads as software rather than
+        // paper, and keeps saturated chart colours looking deliberate.
+        page: "#f6f7f9",
+        surface: "#ffffff",
+        raised: "#ffffff",
+        edge: "#e6e8ec",
+        edgeStrong: "#d5d8de",
+
         ink: {
-          primary: withAlpha("--c-ink-primary"),
-          secondary: withAlpha("--c-ink-secondary"),
-          muted: withAlpha("--c-ink-muted"),
+          primary: "#101828",
+          secondary: "#475467",
+          muted: "#8a91a0",
         },
         line: {
-          grid: withAlpha("--c-line-grid"),
-          axis: withAlpha("--c-line-axis"),
+          grid: "#eceef2",
+          axis: "#cfd3db",
         },
-        edge: withAlpha("--c-edge"),
+
+        // One accent, used for brand, interaction and the primary series.
+        accent: "#2a78d6",
+        accentStrong: "#1c5cab",
+        accentSoft: "#eef4fd",
+
         series: {
-          1: withAlpha("--c-series-1"),
-          2: withAlpha("--c-series-2"),
-          3: withAlpha("--c-series-3"),
-          4: withAlpha("--c-series-4"),
-          5: withAlpha("--c-series-5"),
-          6: withAlpha("--c-series-6"),
-          7: withAlpha("--c-series-7"),
-          8: withAlpha("--c-series-8"),
+          1: "#2a78d6",
+          2: "#eb6834",
+          3: "#1baf7a",
+          4: "#eda100",
+          5: "#e87ba4",
+          6: "#008300",
+          7: "#4a3aa7",
+          8: "#e34948",
         },
+
+        // Reserved for state. Never reused as a series colour.
         status: {
-          good: withAlpha("--c-status-good"),
-          goodBg: withAlpha("--c-status-good-bg"),
-          goodText: withAlpha("--c-status-good-text"),
-          warning: withAlpha("--c-status-warning"),
-          warningBg: withAlpha("--c-status-warning-bg"),
-          warningText: withAlpha("--c-status-warning-text"),
-          serious: withAlpha("--c-status-serious"),
-          seriousBg: withAlpha("--c-status-serious-bg"),
-          seriousText: withAlpha("--c-status-serious-text"),
-          critical: withAlpha("--c-status-critical"),
-          criticalBg: withAlpha("--c-status-critical-bg"),
-          criticalText: withAlpha("--c-status-critical-text"),
+          good: "#0ca30c",
+          goodBg: "#eaf7ea",
+          goodText: "#046304",
+          warning: "#fab219",
+          warningBg: "#fdf4e3",
+          warningText: "#8a5a00",
+          serious: "#ec835a",
+          seriousBg: "#fdeee7",
+          seriousText: "#a8492a",
+          critical: "#d03b3b",
+          criticalBg: "#fdecec",
+          criticalText: "#b02626",
         },
       },
       fontFamily: {
-        sans: ["system-ui", "-apple-system", '"Segoe UI"', "sans-serif"],
+        sans: ["system-ui", "-apple-system", '"Segoe UI"', "Roboto", "sans-serif"],
+      },
+      boxShadow: {
+        card: "0 1px 2px rgba(16, 24, 40, 0.04)",
+        raised: "0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04)",
+      },
+      letterSpacing: {
+        label: "0.06em",
       },
     },
   },

@@ -9,7 +9,7 @@ sold materially below the going rate.
 
 Deliberately excluded from the inputs: value added, markup, handling
 charges and the manual adjustment itself. Those are outputs of the pricing
-decision, not inputs to it — including them would let the model reconstruct
+decision, not inputs to it, and including them would let the model reconstruct
 the answer and produce a meaninglessly good score.
 
 Price is modelled in log space because job values span four orders of

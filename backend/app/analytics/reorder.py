@@ -7,7 +7,7 @@ sequence of order events we derive:
   - how regular that cadence is (coefficient of variation of the gaps)
   - a naive forecast of the next order date and its expected value
 
-This is a simple heuristic (moving average), not a trained model — it is
+This is a simple heuristic (moving average), not a trained model, and it is
 transparent and defensible for a first cut, and swappable for a real
 survival/time-series model later without changing the API shape.
 """

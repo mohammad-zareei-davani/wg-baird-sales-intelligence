@@ -2,8 +2,8 @@ import type { ChurnCustomer } from "../api/types";
 import { formatCurrency } from "../format";
 import { StatusBadge } from "./StatusBadge";
 
-const th = "px-2.5 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted";
-const td = "whitespace-nowrap border-t border-line-grid px-2.5 py-2 text-ink-primary";
+const th = "whitespace-nowrap border-b border-edge px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-label text-ink-muted";
+const td = "whitespace-nowrap border-t border-edge px-4 py-2.5 text-ink-primary";
 
 export function FollowUpTable({ rows }: { rows: ChurnCustomer[] }) {
   return (
@@ -34,8 +34,8 @@ export function FollowUpTable({ rows }: { rows: ChurnCustomer[] }) {
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={6} className="border-t border-line-grid px-2.5 py-5 text-center text-ink-muted">
-                No at-risk or dormant customers — every account ordered within its normal cadence.
+              <td colSpan={6} className="border-t border-edge px-4 py-6 text-center text-ink-muted">
+                No at-risk or dormant customers. Every account ordered within its normal cadence.
               </td>
             </tr>
           )}

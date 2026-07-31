@@ -16,7 +16,7 @@ import os
 # base currency before aggregation.
 #
 # W&G Baird is Northern Ireland based, so Stg is the natural base. The rate
-# is a planning assumption, not a live FX feed — it is surfaced in the UI
+# is a planning assumption, not a live FX feed, so it is surfaced in the UI
 # and overridable via the BAIRD_EUR_GBP environment variable.
 BASE_CURRENCY = "GBP"
 BASE_CURRENCY_SYMBOL = "£"

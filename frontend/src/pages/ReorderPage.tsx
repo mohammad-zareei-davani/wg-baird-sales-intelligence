@@ -23,7 +23,7 @@ export function ReorderPage() {
   );
 
   return (
-    <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
+    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
       <PageTitle eyebrow="Reorder Forecasting" title={reorder.brief.title} />
       <Brief brief={reorder.brief} />
 
@@ -35,10 +35,10 @@ export function ReorderPage() {
                 key={f.key}
                 type="button"
                 onClick={() => setFilter(f.key)}
-                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold ${
+                className={`rounded-md border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
                   filter === f.key
-                    ? "border-series-1 bg-series-1 text-white"
-                    : "border-edge/10 bg-raised text-ink-secondary hover:border-series-1 hover:text-series-1"
+                    ? "border-accent bg-accent text-white"
+                    : "border-edge bg-surface text-ink-secondary hover:border-accent hover:text-accentStrong"
                 }`}
               >
                 {f.label}

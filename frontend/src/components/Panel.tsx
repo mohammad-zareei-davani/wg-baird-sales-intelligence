@@ -10,12 +10,16 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-black/10 bg-surface p-5">
-      <header>
-        <h2 className="mb-1 text-base font-semibold">{title}</h2>
-        {subtitle && <p className="mb-4 text-[13px] text-ink-secondary">{subtitle}</p>}
+    <section className="rounded-lg border border-edge bg-surface shadow-card">
+      <header className="border-b border-edge px-5 py-3.5">
+        <h3 className="text-[14px] font-semibold text-ink-primary">{title}</h3>
+        {subtitle && (
+          <p className="mt-1 max-w-[80ch] text-[12.5px] leading-relaxed text-ink-secondary">
+            {subtitle}
+          </p>
+        )}
       </header>
-      <div>{children}</div>
+      <div className="p-5">{children}</div>
     </section>
   );
 }

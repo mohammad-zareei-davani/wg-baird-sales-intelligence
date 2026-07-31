@@ -88,7 +88,7 @@ def customer_value_brief(result: dict) -> dict:
     total_va = sum(w["total_va_amount"] for w in work) or 1
 
     descriptions = {
-        "Litho": "Large-format offset presses — the core of the business",
+        "Litho": "Large-format offset presses, the core of the business",
         "Digital": "Short-run work on digital presses",
         "Wide Format": "Banners, pop-ups and display work",
         "Outwork": "Produced entirely through external suppliers",
@@ -131,7 +131,7 @@ def customer_value_brief(result: dict) -> dict:
             "items": [
                 _action(
                     f"Put a named relationship plan behind {top}.",
-                    "Free — one meeting",
+                    "Free: one meeting",
                     "free",
                     f"An account worth {pct(c['top_customer_share_pct'])} of value added should "
                     f"have a board-visible owner, a documented renewal position, and more than one "
@@ -140,7 +140,7 @@ def customer_value_brief(result: dict) -> dict:
                 ),
                 _action(
                     "Set a growth target for the mid-tier specifically.",
-                    "Planning — quarterly review",
+                    "Planning: quarterly review",
                     "low",
                     f"Only {c['customers_for_80pct_value']} of {c['customer_count']} customers "
                     f"produce 80% of value. Growing the accounts immediately below the top five is "
@@ -149,11 +149,11 @@ def customer_value_brief(result: dict) -> dict:
                 ),
                 _action(
                     "Check the value mix, not just the revenue mix.",
-                    "Free — review this report",
+                    "Free: review this report",
                     "free",
                     "Work types differ sharply in what they keep per pound sold. Ranking customers "
                     "by value added rather than turnover changes who the most important accounts "
-                    "are — and it should change where sales effort is pointed.",
+                    "are, and it should change where sales effort is pointed.",
                 ),
             ],
         },
@@ -182,7 +182,7 @@ def pricing_brief(result: dict) -> dict:
                 f"The estimating system calculates a price, and on {pct(s['overridden_pct'])} of "
                 f"jobs somebody changes it before the quote goes out. Reductions of "
                 f"{money(s['discount_total'])} are almost exactly offset by uplifts of "
-                f"{money(s['uplift_total'])}, so this is not money leaking away — but it does mean "
+                f"{money(s['uplift_total'])}, so this is not money leaking away, but it does mean "
                 f"pricing depends on who handles the job rather than on a rule the business can "
                 f"review or improve."
             ),
@@ -211,7 +211,7 @@ def pricing_brief(result: dict) -> dict:
                 ),
                 _row(
                     "Low-margin work",
-                    "Under 25% value added — too thin to carry overhead",
+                    "Under 25% value added, too thin to carry overhead",
                     money(s["low_margin_sell_value"]),
                     pct(s["low_margin_pct"], 1) + " of jobs",
                 ),
@@ -231,7 +231,7 @@ def pricing_brief(result: dict) -> dict:
                 ),
                 _action(
                     "Recalibrate the automated price.",
-                    "Project — high payback",
+                    "Project: high payback",
                     "value",
                     f"A calculated price that needs changing on {pct(s['overridden_pct'])} of jobs "
                     f"is not doing its job. Feed the last two years of overrides back into the "
@@ -240,11 +240,11 @@ def pricing_brief(result: dict) -> dict:
                 ),
                 _action(
                     f"Agree a discount authority threshold, starting with {top_disc}.",
-                    "Free — policy decision",
+                    "Free: policy decision",
                     "free",
                     f"{top_disc} absorbed {money(s['top_discount_amount'])} of reductions. Set a "
                     f"level beyond which a price cut needs a second signature. The aim is not to "
-                    f"stop discounting — it is to make sure the larger ones are deliberate.",
+                    f"stop discounting; it is to make sure the larger ones are deliberate.",
                 ),
             ],
         },
@@ -291,15 +291,15 @@ def reorder_brief(result: dict) -> dict:
             "items": [
                 _action(
                     "Work the overdue list first.",
-                    "Free — sales call",
+                    "Free: sales call",
                     "free",
                     "A customer whose own pattern says they should have ordered by now is the "
-                    "cheapest lead the business has. No prospecting, no introduction — just a call "
+                    "cheapest lead the business has. No prospecting, no introduction, just a call "
                     "asking whether anything has changed.",
                 ),
                 _action(
                     "Give production the due-soon list weekly.",
-                    "Free — existing meeting",
+                    "Free: existing meeting",
                     "free",
                     f"Roughly {money(s['expected_value_next_30_days'])} is expected in the next 30 "
                     f"days. Scheduling against that forward view beats reacting to orders as they "
@@ -307,7 +307,7 @@ def reorder_brief(result: dict) -> dict:
                 ),
                 _action(
                     "Treat a broken rhythm as an early warning.",
-                    "Free — flag to account manager",
+                    "Free: flag to account manager",
                     "watch",
                     "A customer who reliably ordered monthly and has now missed twice is telling "
                     "you something before they tell you. That signal is worth more when it is acted "
@@ -338,7 +338,7 @@ def churn_brief(result: dict) -> dict:
             "value": money(at_stake),
             "caption": "of lifetime value sits with dormant accounts",
             "body": (
-                f"Customers rarely announce that they are leaving — they simply stop calling. "
+                f"Customers rarely announce that they are leaving; they simply stop calling. "
                 f"{count(at_risk)} {_plural(at_risk, 'account is', 'accounts are')} quieter than "
                 f"their own history would predict, and {count(dormant)} "
                 f"{_plural(dormant, 'has', 'have')} effectively stopped. Acting while an account is "
@@ -359,11 +359,11 @@ def churn_brief(result: dict) -> dict:
             "items": [
                 _action(
                     "Call the at-risk accounts this week.",
-                    "Free — sales call",
+                    "Free: sales call",
                     "free",
                     "These customers have not left; they have gone quiet. A single call asking "
                     "whether anything has changed will usually reveal whether it is a pause, a "
-                    "budget issue, or a competitor — while there is still time to respond.",
+                    "budget issue, or a competitor, while there is still time to respond.",
                 ),
                 _action(
                     "Run the dormant list as a funded campaign.",
@@ -375,7 +375,7 @@ def churn_brief(result: dict) -> dict:
                 ),
                 _action(
                     "Judge silence against each customer's own habit.",
-                    "Free — already built in",
+                    "Free: already built in",
                     "free",
                     "Six weeks of quiet from a fortnightly customer is a warning; the same six "
                     "weeks from a twice-a-year customer means nothing. A single company-wide "
@@ -417,9 +417,9 @@ def seasonality_brief(result: dict) -> dict:
             "title": "Planning implications by season",
             "columns": ["Period", "What it means for the plant", "Level", "Priority"],
             "rows": [
-                _row(f"Peak — {s['peak_month']}", "Risk of overtime, outsourcing and missed dates",
+                _row(f"Peak ({s['peak_month']})", "Risk of overtime, outsourcing and missed dates",
                      pct(s["peak_index"], 0), "Book capacity early"),
-                _row(f"Trough — {s['trough_month']}", "Fixed cost carried against much less work",
+                _row(f"Trough ({s['trough_month']})", "Fixed cost carried against much less work",
                      pct(s["trough_index"], 0), "Schedule maintenance"),
                 _row("Recent press load", "Average press hours over the last 12 months",
                      f"{s['press_hours_recent_avg']:,.0f} hrs", "Baseline"),
@@ -432,7 +432,7 @@ def seasonality_brief(result: dict) -> dict:
             "items": [
                 _action(
                     "Set shift patterns and holidays from the seasonal shape.",
-                    "Free — planning decision",
+                    "Free: planning decision",
                     "free",
                     f"Planning against last month's actuals guarantees being wrong twice a year. "
                     f"The projection for next month is {money(s['forecast_next_month_sales'])} of "
@@ -440,7 +440,7 @@ def seasonality_brief(result: dict) -> dict:
                 ),
                 _action(
                     f"Move maintenance and training into {s['trough_month']}.",
-                    "Free — reschedule existing work",
+                    "Free: reschedule existing work",
                     "free",
                     "The quiet month is the cheapest possible window for planned downtime, press "
                     "servicing and operator training. Doing this work in a peak month costs "
@@ -448,15 +448,15 @@ def seasonality_brief(result: dict) -> dict:
                 ),
                 _action(
                     "Target off-peak work deliberately.",
-                    "Campaign — fills fixed cost",
+                    "Campaign: fills fixed cost",
                     "low",
                     "Sales effort aimed at customers whose own cycle falls in the quiet months is "
-                    "worth more per pound than work that arrives when the presses are already full "
-                    "— it uses capacity that is otherwise paid for and idle.",
+                    "worth more per pound than work that arrives when the presses are already full, "
+                    "because it uses capacity that is otherwise paid for and idle.",
                 ),
             ],
         }
-        | ({"footnote": f"Backtested against recent months, the projection has been out by about {pct(mape, 0)} on average — close enough to plan capacity around, not close enough to commit to."} if mape is not None else {}),
+        | ({"footnote": f"Backtested against recent months, the projection has been out by about {pct(mape, 0)} on average. That is close enough to plan capacity around, but not close enough to commit to."} if mape is not None else {}),
     )
 
 
@@ -471,7 +471,7 @@ def delivery_brief(result: dict) -> dict:
         title="How Long Work Takes to Leave the Building",
         metrics=[
             _metric("Typical turnaround", f"{s['median_days']:.0f} days", "Half of all jobs ship within this"),
-            _metric("Slowest tenth", f"{s['p90_days']:.0f} days", "Or longer — where complaints come from"),
+            _metric("Slowest tenth", f"{s['p90_days']:.0f} days", "Or longer, where complaints come from"),
             _metric("Recent trend", f"{s['recent_vs_prior_days']:+.1f} days", f"Turnaround has {trend_word}"),
         ],
         hero={
@@ -479,7 +479,7 @@ def delivery_brief(result: dict) -> dict:
             "caption": "from order booked to job despatched",
             "body": (
                 f"Half of all work ships within {s['median_days']:.0f} days, but the slowest tenth "
-                f"takes {s['p90_days']:.0f} days or more — and it is the spread, not the average, "
+                f"takes {s['p90_days']:.0f} days or more, and it is the spread, not the average, "
                 f"that customers notice. {s['fastest_work_type']} work turns around in about "
                 f"{s['fastest_median_days']:.0f} days against {s['slowest_median_days']:.0f} for "
                 f"{s['slowest_work_type']}. Turnaround has {trend_word} recently."
@@ -508,7 +508,7 @@ def delivery_brief(result: dict) -> dict:
             "items": [
                 _action(
                     "Publish a turnaround promise per product, not one company figure.",
-                    "Free — policy decision",
+                    "Free: policy decision",
                     "free",
                     f"A {s['fastest_median_days']:.0f}-day digital job and a "
                     f"{s['slowest_median_days']:.0f}-day litho run cannot share one commitment. "
@@ -517,7 +517,7 @@ def delivery_brief(result: dict) -> dict:
                 ),
                 _action(
                     "Review jobs running far beyond their own product's norm.",
-                    "Free — exception review",
+                    "Free: exception review",
                     "watch",
                     "A long book run is not a problem; a book run taking twice what book runs "
                     "normally take is. Comparing each job against its own product's typical "
@@ -525,7 +525,7 @@ def delivery_brief(result: dict) -> dict:
                 ),
                 _action(
                     "Track the slowest tenth, not the average.",
-                    "Free — change the KPI",
+                    "Free: change the KPI",
                     "free",
                     f"The median has barely moved, but the tail at {s['p90_days']:.0f} days is "
                     f"where expedite costs, complaints and lost repeat business originate. Managing "
@@ -551,7 +551,7 @@ def repeat_business_brief(result: dict) -> dict:
             "value": money(s["reprint_pipeline_value"]),
             "caption": "of reprint work is now overdue",
             "body": (
-                f"{pct(s['repeat_revenue_pct'])} of revenue comes from titles printed before — work "
+                f"{pct(s['repeat_revenue_pct'])} of revenue comes from titles printed before, work "
                 f"where the origination is done and the specification is proven. "
                 f"{count(s['titles_due_reprint'])} of those titles are now past their own reprint "
                 f"cycle. Each one is either about to be ordered, about to be ordered somewhere "
@@ -585,7 +585,7 @@ def repeat_business_brief(result: dict) -> dict:
                 ),
                 _action(
                     "Quote reprints before the customer asks.",
-                    "Free — sales behaviour",
+                    "Free: sales behaviour",
                     "free",
                     "A competitor only needs the specification the customer already holds to quote "
                     "against you. Getting there first, with a price and a slot, is usually enough "
@@ -593,7 +593,7 @@ def repeat_business_brief(result: dict) -> dict:
                 ),
                 _action(
                     "Use reprint cycles to fill quiet press weeks.",
-                    "Planning — uses idle capacity",
+                    "Planning: uses idle capacity",
                     "low",
                     "Reprints are among the few jobs where timing is genuinely negotiable. Pulling "
                     "them forward into a slow week fills capacity that is otherwise paid for and "
@@ -656,7 +656,7 @@ def quote_guard_brief(result: dict) -> dict:
             "items": [
                 _action(
                     "Show the benchmark inside the estimating screen.",
-                    "Integration — highest value",
+                    "Integration: highest value",
                     "value",
                     "The number is only useful at the moment the quote is being built. Displayed "
                     "alongside the calculated price it gives the estimator a second opinion without "
@@ -664,7 +664,7 @@ def quote_guard_brief(result: dict) -> dict:
                 ),
                 _action(
                     "Start advisory, not blocking.",
-                    "Free — rollout decision",
+                    "Free: rollout decision",
                     "free",
                     "Show the comparison and let estimators price as they see fit. Review the "
                     "flagged jobs monthly to confirm the model is calling them fairly before giving "
@@ -712,7 +712,7 @@ def churn_model_brief(result: dict) -> dict:
             "caption": f"accounts unlikely to order within {m['lookahead_days']} days",
             "body": (
                 f"Rather than asking who has gone quiet, this asks how likely each account is to "
-                f"come back — weighing how overdue they are against their own habit, whether spend "
+                f"come back, weighing how overdue they are against their own habit, whether spend "
                 f"is falling, and how established the relationship is. Trained on earlier months "
                 f"and tested only on later ones, it scores {m['auc']:.3f} against "
                 f"{m['baseline_auc']:.3f} for simply asking who is overdue."
@@ -724,7 +724,7 @@ def churn_model_brief(result: dict) -> dict:
             "rows": [
                 _row("High", "Unlikely to order in the next 60 days",
                      count(bands.get("High", 0)), "Contact this week"),
-                _row("Medium", "Uncertain — watch for a further slip",
+                _row("Medium", "Uncertain, watch for a further slip",
                      count(bands.get("Medium", 0)), "Monitor"),
                 _row("Low", "Expected to order as normal",
                      count(bands.get("Low", 0)), "None"),
@@ -737,14 +737,14 @@ def churn_model_brief(result: dict) -> dict:
             "items": [
                 _action(
                     "Rank the monthly call list by risk score.",
-                    "Free — reorder existing work",
+                    "Free: reorder existing work",
                     "free",
                     "The score adds most value as a priority order, not as a verdict. Account "
                     "managers keep the same list; they just work it in a better sequence.",
                 ),
                 _action(
                     "Cross-check high risk against account value.",
-                    "Free — combine two views",
+                    "Free: combine two views",
                     "watch",
                     "A high-risk account worth a few thousand and one worth six figures deserve "
                     "very different responses. Read this page alongside customer value before "
@@ -752,7 +752,7 @@ def churn_model_brief(result: dict) -> dict:
                 ),
                 _action(
                     "Re-test the model as history accumulates.",
-                    "Ongoing — quarterly",
+                    "Ongoing: quarterly",
                     "low",
                     f"With only {m['customers']} customers the model is working from limited "
                     f"evidence. Re-running it each quarter, and watching whether it still beats the "
@@ -781,7 +781,7 @@ def data_quality_brief(summary: dict) -> dict:
     rows.append(_row(
         f"Reported total ({BASE_CURRENCY})",
         "Every figure in this dashboard, converted",
-        "—",
+        "n/a",
         money(summary.get("total_sell_price", 0)),
     ))
 
@@ -812,21 +812,21 @@ def data_quality_brief(summary: dict) -> dict:
             "items": [
                 _action(
                     "Agree one reporting currency for management accounts.",
-                    "Free — policy decision",
+                    "Free: policy decision",
                     "free",
                     "Mixed-currency totals are not comparable across regions or periods. Fixing the "
                     "convention once removes a recurring source of confusion in board reporting.",
                 ),
                 _action(
                     "Hold the conversion rate fixed within a reporting period.",
-                    "Free — convention",
+                    "Free: convention",
                     "free",
                     "A rate that moves between reports makes trading performance and exchange-rate "
                     "movement impossible to separate. Fix it for the year and restate deliberately.",
                 ),
                 _action(
                     "Tidy product naming at entry.",
-                    "Low cost — data hygiene",
+                    "Low cost: data hygiene",
                     "low",
                     "The source carries 64 product types, several of which are the same category "
                     "typed differently. Spelling variants are merged automatically here, but a "

@@ -1,5 +1,4 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { ThemeProvider } from "./theme/ThemeContext";
 import { DashboardDataProvider } from "./data/DashboardDataContext";
 import { AppLayout } from "./layout/AppLayout";
 import { OverviewPage } from "./pages/OverviewPage";
@@ -15,9 +14,8 @@ import { ChurnRiskPage } from "./pages/ChurnRiskPage";
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <DashboardDataProvider>
-        <BrowserRouter>
+    <DashboardDataProvider>
+      <BrowserRouter>
           <Routes>
             <Route element={<AppLayout />}>
               <Route index element={<OverviewPage />} />
@@ -31,9 +29,8 @@ export default function App() {
               <Route path="quote-guard" element={<QuoteGuardPage />} />
               <Route path="churn-risk" element={<ChurnRiskPage />} />
             </Route>
-          </Routes>
-        </BrowserRouter>
-      </DashboardDataProvider>
-    </ThemeProvider>
+        </Routes>
+      </BrowserRouter>
+    </DashboardDataProvider>
   );
 }
