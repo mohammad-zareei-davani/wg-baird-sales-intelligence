@@ -1,34 +1,14 @@
-# Python
-.venv/
-.fresh_venv/
 __pycache__/
-*.py[cod]
-*$py.class
-*.egg-info/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
-# Node
+*.pyc
+.venv/
+venv/
 node_modules/
-frontend/dist/
-frontend/.vite/
-*.log
-
-# Data & artifacts
-*.sqlite3
-data/raw/
-data/db.sqlite3
-backend/ml/artifacts/
-ml/artifacts/
-
-# IDE / OS
-.idea/
-.vscode/
-.DS_Store
-Thumbs.db
-*.swp
-
-# Env
+dist/
+build/
 .env
-.env.*
+*.log
+data/raw/*
+!data/raw/.gitkeep
+data/uploads/*
+!data/uploads/.gitkeep
+.DS_Store

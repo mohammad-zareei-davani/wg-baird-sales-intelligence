@@ -1,0 +1,46 @@
+import type { ChurnCustomer } from "../api/types";
+import { formatCurrency } from "../format";
+import { StatusBadge } from "./StatusBadge";
+
+const th = "px-2.5 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted";
+const td = "whitespace-nowrap border-t border-line-grid px-2.5 py-2 text-ink-primary";
+
+export function FollowUpTable({ rows }: { rows: ChurnCustomer[] }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-[13px]">
+        <thead>
+          <tr>
+            <th className={th}>Customer</th>
+            <th className={th}>Industry</th>
+            <th className={th}>Rep</th>
+            <th className={th}>Days since order</th>
+            <th className={th}>Lifetime VA</th>
+            <th className={th}>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.customer_id}>
+              <td className={td}>{r.customer_name}</td>
+              <td className={td}>{r.industry}</td>
+              <td className={td}>{r.rep}</td>
+              <td className={td}>{r.days_since_last_order}</td>
+              <td className={td}>{formatCurrency(r.lifetime_va_amount)}</td>
+              <td className={td}>
+                <StatusBadge status={r.status} />
+              </td>
+            </tr>
+          ))}
+          {rows.length === 0 && (
+            <tr>
+              <td colSpan={6} className="border-t border-line-grid px-2.5 py-5 text-center text-ink-muted">
+                No at-risk or dormant customers — every account ordered within its normal cadence.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}

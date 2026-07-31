@@ -2,56 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
-}
-
-html,
-body,
-#root {
-  height: 100%;
-}
-
 body {
-  margin: 0;
-  background-color: #f7f6f3;
-  color: #16161a;
-  font-family: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Tabular numerals everywhere numbers appear. Alignment is set per use:
-   table columns are right-justified, standalone figures are not. */
-.num {
-  font-family: "IBM Plex Mono", Consolas, monospace;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-:focus-visible {
-  outline: 2px solid #0b7fa8;
-  outline-offset: 2px;
-}
-
-.fade-in {
-  animation: fade 150ms ease-out;
-}
-
-@keyframes fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fade-in {
-    animation: none;
-  }
-  * {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-  }
+  @apply bg-page text-ink-primary font-sans antialiased;
 }
