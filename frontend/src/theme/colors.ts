@@ -8,39 +8,39 @@
  * so add to the end rather than reshuffling.
  */
 export const SERIES = [
-  "#2a78d6", // blue
-  "#eb6834", // orange
-  "#1baf7a", // aqua
-  "#eda100", // yellow
-  "#e87ba4", // magenta
-  "#008300", // green
-  "#4a3aa7", // violet
-  "#e34948", // red
+  "#0c6b7a", // process cyan
+  "#c45c2a", // burnt orange
+  "#1a9a6c", // green
+  "#c48a00", // amber
+  "#c45a82", // magenta
+  "#2d7a3a", // forest
+  "#5a4a9e", // violet
+  "#c43c3c", // red
 ] as const;
 
 export const STATUS = {
-  good: "#0ca30c",
-  warning: "#fab219",
-  serious: "#ec835a",
-  critical: "#d03b3b",
+  good: "#1a8f3c",
+  warning: "#c48a00",
+  serious: "#c45c2a",
+  critical: "#c43c3c",
 } as const;
 
 export const CHART = {
-  gridline: "#eceef2",
-  axis: "#cfd3db",
-  textMuted: "#8a91a0",
-  textSecondary: "#475467",
-  textPrimary: "#101828",
+  gridline: "#e4e7ec",
+  axis: "#c5cad3",
+  textMuted: "#6e7785",
+  textSecondary: "#3f4754",
+  textPrimary: "#0f1419",
   surface: "#ffffff",
-  border: "#e6e8ec",
+  border: "#d4d8de",
 } as const;
 
 /** Shared tooltip styling so every chart's hover card matches. */
 export const tooltipStyle = {
   background: CHART.surface,
   border: `1px solid ${CHART.border}`,
-  borderRadius: 8,
-  boxShadow: "0 4px 12px rgba(16, 24, 40, 0.08)",
+  borderRadius: 6,
+  boxShadow: "0 8px 24px rgba(15, 20, 25, 0.08)",
   color: CHART.textPrimary,
   fontSize: 12.5,
   padding: "8px 10px",

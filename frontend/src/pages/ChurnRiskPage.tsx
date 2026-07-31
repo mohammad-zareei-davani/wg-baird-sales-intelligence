@@ -17,7 +17,7 @@ export function ChurnRiskPage() {
   const m = churnRisk.metrics;
 
   return (
-    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
+    <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
       <PageTitle eyebrow="Predictive Retention Risk" title={churnRisk.brief.title} />
       <Brief brief={churnRisk.brief} />
 
@@ -29,7 +29,7 @@ export function ChurnRiskPage() {
           >
             <div className="flex flex-wrap gap-1.5">
               {(churnRisk.features_used ?? []).map((f) => (
-                <span key={f} className="rounded-md border border-edge bg-page px-2.5 py-1 text-[11px] text-ink-secondary">
+                <span key={f} className="border border-edge bg-surface px-2.5 py-1 text-[11px] text-ink-secondary">
                   {f}
                 </span>
               ))}
@@ -66,8 +66,8 @@ export function ChurnRiskPage() {
                       <td className={td}>{c.customer_name}</td>
                       <td className={td}>
                         <span
-                          className={`inline-block whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-semibold ${
-                            BAND_STYLE[c.risk_band] ?? "bg-page text-ink-muted"
+                          className={`inline-block whitespace-nowrap px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide ${
+                            BAND_STYLE[c.risk_band] ?? "bg-surface text-ink-muted"
                           }`}
                         >
                           {c.risk_band}

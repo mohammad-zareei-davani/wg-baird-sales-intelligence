@@ -38,7 +38,7 @@ export function CustomerValueChart({ data }: { data: TopCustomer[] }) {
             `Value added (${item.payload.workType})`,
           ]}
         />
-        <Bar dataKey="va" radius={[0, 3, 3, 0]} maxBarSize={16} fill={SERIES[0]} />
+        <Bar dataKey="va" radius={[0, 0, 0, 0]} maxBarSize={16} fill={SERIES[0]} />
       </BarChart>
     </ResponsiveContainer>
   );

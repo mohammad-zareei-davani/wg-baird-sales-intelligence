@@ -24,11 +24,9 @@ const BADGE_TONE: Record<string, string> = {
 
 export function PageTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
-    <header className="pb-1">
-      <div className="text-[11px] font-semibold uppercase tracking-label text-accentStrong">
-        {eyebrow}
-      </div>
-      <h1 className="mt-2 text-[28px] font-semibold leading-[1.15] tracking-[-0.015em] text-ink-primary">
+    <header className="pb-2">
+      <div className={`${LABEL} text-accentStrong`}>{eyebrow}</div>
+      <h1 className="mt-2.5 font-display text-[32px] font-semibold leading-[1.12] tracking-[-0.02em] text-ink-primary md:text-[36px]">
         {title}
       </h1>
     </header>
@@ -41,14 +39,21 @@ export function MetricRow({ metrics }: { metrics: BriefType["metrics"] }) {
   if (!metrics.length) return null;
 
   return (
-    <div className="grid grid-cols-1 divide-y divide-edge overflow-hidden rounded-lg border border-edge bg-surface shadow-card sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-      {metrics.map((m) => (
-        <div key={m.label} className="px-5 py-4">
+    <div className="grid grid-cols-1 gap-6 border-y border-edge py-5 sm:grid-cols-3 sm:gap-0">
+      {metrics.map((m, i) => (
+        <div
+          key={m.label}
+          className={`sm:px-6 ${i === 0 ? "sm:pl-0" : ""} ${i === metrics.length - 1 ? "sm:pr-0" : ""} ${
+            i ? "sm:border-l sm:border-edge" : ""
+          }`}
+        >
           <div className={LABEL}>{m.label}</div>
-          <div className="tnum mt-2 text-[30px] font-semibold leading-none tracking-[-0.02em] text-ink-primary">
+          <div className="tnum mt-2.5 text-[34px] font-semibold leading-none tracking-[-0.03em] text-ink-primary">
             {m.value}
           </div>
-          <div className="mt-1.5 text-[12.5px] leading-snug text-ink-secondary">{m.sublabel}</div>
+          <div className="mt-2 max-w-[28ch] text-[12.5px] leading-snug text-ink-secondary">
+            {m.sublabel}
+          </div>
         </div>
       ))}
     </div>
@@ -59,19 +64,17 @@ export function MetricRow({ metrics }: { metrics: BriefType["metrics"] }) {
 
 export function Finding({ hero }: { hero: BriefType["hero"] }) {
   return (
-    <section className="rounded-lg border border-edge bg-surface shadow-card">
-      <div className="border-b border-edge px-5 py-2.5">
-        <span className={LABEL}>Key finding</span>
-      </div>
-      <div className="grid gap-5 px-5 py-5 md:grid-cols-[200px_1fr] md:gap-8">
-        <div>
-          <div className="tnum text-[38px] font-semibold leading-none tracking-[-0.025em] text-accentStrong">
-            {hero.value}
-          </div>
-          <div className="mt-2 text-[12.5px] leading-snug text-ink-secondary">{hero.caption}</div>
+    <section className="grid gap-6 md:grid-cols-[220px_1fr] md:gap-10">
+      <div>
+        <div className={LABEL}>Key finding</div>
+        <div className="tnum mt-3 text-[44px] font-semibold leading-none tracking-[-0.03em] text-accentStrong">
+          {hero.value}
         </div>
-        <p className="max-w-[68ch] text-[14.5px] leading-[1.65] text-ink-primary">{hero.body}</p>
+        <div className="mt-2.5 text-[12.5px] leading-snug text-ink-secondary">{hero.caption}</div>
       </div>
+      <p className="max-w-[68ch] border-t border-edge pt-4 text-[15px] leading-[1.7] text-ink-primary md:border-t-0 md:border-l md:pt-0 md:pl-10">
+        {hero.body}
+      </p>
     </section>
   );
 }
@@ -84,15 +87,17 @@ export function BreakdownTable({ breakdown }: { breakdown: BriefType["breakdown"
 
   return (
     <section>
-      <h2 className="mb-3 text-[15px] font-semibold text-ink-primary">{breakdown.title}</h2>
-      <div className="overflow-x-auto rounded-lg border border-edge bg-surface shadow-card">
+      <h2 className="mb-4 font-display text-[20px] font-semibold tracking-[-0.01em] text-ink-primary">
+        {breakdown.title}
+      </h2>
+      <div className="overflow-x-auto border border-edge bg-raised">
         <table className="w-full border-collapse text-[13px]">
           <thead>
-            <tr className="bg-page/60">
+            <tr className="bg-surface">
               {[c0, c1, c2, c3].map((c, i) => (
                 <th
                   key={c ?? i}
-                  className={`whitespace-nowrap border-b border-edge px-4 py-2.5 text-[11px] font-semibold uppercase tracking-label text-ink-muted ${
+                  className={`whitespace-nowrap border-b border-edge px-4 py-3 text-[11px] font-semibold uppercase tracking-label text-ink-muted ${
                     i >= 2 ? "text-right" : "text-left"
                   }`}
                 >
@@ -104,14 +109,14 @@ export function BreakdownTable({ breakdown }: { breakdown: BriefType["breakdown"
           <tbody>
             {breakdown.rows.map((r, i) => (
               <tr key={r.category} className={i ? "border-t border-edge" : ""}>
-                <td className="whitespace-nowrap px-4 py-3 font-medium text-ink-primary">
+                <td className="whitespace-nowrap px-4 py-3.5 font-medium text-ink-primary">
                   {r.category}
                 </td>
-                <td className="px-4 py-3 text-ink-secondary">{r.description}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-ink-primary">
+                <td className="px-4 py-3.5 text-ink-secondary">{r.description}</td>
+                <td className="tnum whitespace-nowrap px-4 py-3.5 text-right font-semibold text-ink-primary">
                   {r.value}
                 </td>
-                <td className="whitespace-nowrap px-4 py-3 text-right text-ink-secondary">
+                <td className="tnum whitespace-nowrap px-4 py-3.5 text-right text-ink-secondary">
                   {r.share}
                 </td>
               </tr>
@@ -130,28 +135,30 @@ export function ActionList({ actions }: { actions: BriefType["actions"] }) {
 
   return (
     <section>
-      <h2 className="mb-3 text-[15px] font-semibold text-ink-primary">{actions.title}</h2>
-      <ol className="overflow-hidden rounded-lg border border-edge bg-surface shadow-card">
+      <h2 className="mb-4 font-display text-[20px] font-semibold tracking-[-0.01em] text-ink-primary">
+        {actions.title}
+      </h2>
+      <ol className="border-t border-edge">
         {actions.items.map((a, i) => (
           <li
             key={a.title}
-            className={`flex gap-4 px-5 py-4 ${i ? "border-t border-edge" : ""}`}
+            className="flex gap-4 border-b border-edge py-4"
           >
-            <span className="tnum mt-[3px] w-6 flex-shrink-0 text-[13px] font-semibold text-ink-muted">
+            <span className="tnum mt-0.5 w-7 flex-shrink-0 text-[13px] font-semibold text-accent">
               {String(i + 1).padStart(2, "0")}
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <span className="text-[14px] font-semibold text-ink-primary">{a.title}</span>
+                <span className="text-[14.5px] font-semibold text-ink-primary">{a.title}</span>
                 <span
-                  className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-semibold ${
-                    BADGE_TONE[a.tone] ?? "bg-page text-ink-secondary"
+                  className={`whitespace-nowrap px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide ${
+                    BADGE_TONE[a.tone] ?? "bg-surface text-ink-secondary"
                   }`}
                 >
                   {a.badge}
                 </span>
               </div>
-              <p className="mt-1.5 max-w-[76ch] text-[13px] leading-[1.65] text-ink-secondary">
+              <p className="mt-1.5 max-w-[76ch] text-[13.5px] leading-[1.65] text-ink-secondary">
                 {a.body}
               </p>
             </div>
@@ -159,7 +166,7 @@ export function ActionList({ actions }: { actions: BriefType["actions"] }) {
         ))}
       </ol>
       {actions.footnote && (
-        <p className="mt-2.5 text-[12px] leading-relaxed text-ink-muted">{actions.footnote}</p>
+        <p className="mt-3 text-[12px] leading-relaxed text-ink-muted">{actions.footnote}</p>
       )}
     </section>
   );
@@ -184,7 +191,7 @@ export function Brief({ brief }: { brief: BriefType }) {
  */
 export function SupportingCharts({ children }: { children: ReactNode }) {
   return (
-    <section className="mt-3 flex flex-col gap-5 border-t border-edge pt-6">
+    <section className="mt-2 flex flex-col gap-5 border-t border-edge pt-8">
       <h2 className={LABEL}>Supporting detail</h2>
       {children}
     </section>

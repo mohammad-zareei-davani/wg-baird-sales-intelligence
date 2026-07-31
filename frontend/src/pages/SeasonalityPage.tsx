@@ -11,7 +11,7 @@ export function SeasonalityPage() {
   const s = seasonality.summary;
 
   return (
-    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
+    <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
       <PageTitle eyebrow="Demand & Capacity Planning" title={seasonality.brief.title} />
       <Brief brief={seasonality.brief} />
 

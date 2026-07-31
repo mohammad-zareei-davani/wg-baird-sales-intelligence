@@ -9,6 +9,10 @@
 
   body {
     @apply bg-page text-ink-primary font-sans antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 100% 0%, rgba(12, 107, 122, 0.06), transparent 55%),
+      radial-gradient(ellipse 60% 40% at 0% 100%, rgba(15, 20, 25, 0.04), transparent 50%);
+    background-attachment: fixed;
   }
 
   /* Figures in columns have to line up; prose figures should not be forced
@@ -20,5 +24,15 @@
 
   :focus-visible {
     @apply outline-none ring-2 ring-accent/40 ring-offset-2 ring-offset-page;
+  }
+}
+
+@layer utilities {
+  .page-enter {
+    animation: fade-up 0.45s ease-out both;
+  }
+
+  .page-enter-delay {
+    animation: fade-up 0.5s ease-out 0.06s both;
   }
 }

@@ -55,7 +55,7 @@ export function HorizontalBarChart({
         />
         <Bar
           dataKey="value"
-          radius={[0, 3, 3, 0]}
+          radius={[0, 0, 0, 0]}
           maxBarSize={16}
           fill={SERIES[colorIndex % SERIES.length]}
         />

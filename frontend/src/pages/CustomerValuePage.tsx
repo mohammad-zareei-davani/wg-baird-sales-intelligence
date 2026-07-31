@@ -12,7 +12,7 @@ export function CustomerValuePage() {
   const { customerValue } = useLoadedDashboardData();
 
   return (
-    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
+    <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
       <PageTitle eyebrow="Customer Value" title={customerValue.brief.title} />
       <Brief brief={customerValue.brief} />
 

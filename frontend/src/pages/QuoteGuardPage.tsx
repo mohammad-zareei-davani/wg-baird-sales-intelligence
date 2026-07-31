@@ -10,7 +10,7 @@ export function QuoteGuardPage() {
   const { quoteGuard } = useLoadedDashboardData();
 
   return (
-    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
+    <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
       <PageTitle eyebrow="Quote Intelligence" title={quoteGuard.brief.title} />
       <Brief brief={quoteGuard.brief} />
 
@@ -22,7 +22,7 @@ export function QuoteGuardPage() {
           >
             <div className="flex flex-wrap gap-1.5">
               {(quoteGuard.features_used ?? []).map((f) => (
-                <span key={f} className="rounded-md border border-edge bg-page px-2.5 py-1 text-[11px] text-ink-secondary">
+                <span key={f} className="border border-edge bg-surface px-2.5 py-1 text-[11px] text-ink-secondary">
                   {f}
                 </span>
               ))}

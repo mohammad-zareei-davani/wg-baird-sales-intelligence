@@ -10,11 +10,13 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-edge bg-surface shadow-card">
-      <header className="border-b border-edge px-5 py-3.5">
-        <h3 className="text-[14px] font-semibold text-ink-primary">{title}</h3>
+    <section className="border border-edge bg-raised">
+      <header className="border-b border-edge px-5 py-4">
+        <h3 className="font-display text-[17px] font-semibold tracking-[-0.01em] text-ink-primary">
+          {title}
+        </h3>
         {subtitle && (
-          <p className="mt-1 max-w-[80ch] text-[12.5px] leading-relaxed text-ink-secondary">
+          <p className="mt-1.5 max-w-[80ch] text-[12.5px] leading-relaxed text-ink-secondary">
             {subtitle}
           </p>
         )}

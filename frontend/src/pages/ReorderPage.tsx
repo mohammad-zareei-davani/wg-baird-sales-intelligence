@@ -23,22 +23,22 @@ export function ReorderPage() {
   );
 
   return (
-    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
+    <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
       <PageTitle eyebrow="Reorder Forecasting" title={reorder.brief.title} />
       <Brief brief={reorder.brief} />
 
       <SupportingCharts>
         <Panel title="Forecast by customer" subtitle="Each account's normal rhythm and where they sit against it">
-          <div className="mb-3.5 flex flex-wrap gap-2">
+          <div className="mb-4 flex flex-wrap gap-1.5">
             {FILTERS.map((f) => (
               <button
                 key={f.key}
                 type="button"
                 onClick={() => setFilter(f.key)}
-                className={`rounded-md border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                className={`border px-3 py-1.5 text-[12px] font-semibold transition-colors duration-150 ${
                   filter === f.key
                     ? "border-accent bg-accent text-white"
-                    : "border-edge bg-surface text-ink-secondary hover:border-accent hover:text-accentStrong"
+                    : "border-edge bg-surface text-ink-secondary hover:border-accentStrong hover:text-accentStrong"
                 }`}
               >
                 {f.label}

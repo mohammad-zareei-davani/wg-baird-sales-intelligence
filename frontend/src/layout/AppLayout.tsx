@@ -54,22 +54,29 @@ export function AppLayout() {
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
-      <aside className="flex w-full flex-shrink-0 flex-col border-b border-edge bg-surface lg:sticky lg:top-0 lg:h-screen lg:w-[236px] lg:border-b-0 lg:border-r">
-        <div className="flex items-center gap-2.5 px-5 py-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-[11px] font-bold tracking-wide text-white">
+      <aside className="flex w-full flex-shrink-0 flex-col bg-rail text-rail-text lg:sticky lg:top-0 lg:h-screen lg:w-[248px]">
+        <div className="flex items-start gap-3 border-b border-rail-edge px-5 py-5">
+          <div
+            className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center bg-accent text-[10px] font-bold tracking-[0.12em] text-white"
+            aria-hidden="true"
+          >
             WGB
           </div>
-          <div className="leading-tight">
-            <div className="text-[13px] font-semibold text-ink-primary">W&amp;G Baird</div>
-            <div className="text-[11px] text-ink-muted">Sales Intelligence</div>
+          <div className="min-w-0 leading-tight">
+            <div className="font-display text-[17px] font-semibold tracking-[-0.01em] text-white">
+              W&amp;G Baird
+            </div>
+            <div className="mt-0.5 text-[11px] font-medium tracking-wide text-rail-muted">
+              Sales Intelligence
+            </div>
           </div>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 pb-4">
+        <nav className="flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-5">
           {NAV_GROUPS.map((group, gi) => (
-            <div key={group.heading ?? `g${gi}`} className="flex flex-col gap-px">
+            <div key={group.heading ?? `g${gi}`} className="flex flex-col gap-0.5">
               {group.heading && (
-                <div className="px-2.5 pb-1.5 text-[10px] font-semibold uppercase tracking-label text-ink-muted">
+                <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-label text-rail-muted">
                   {group.heading}
                 </div>
               )}
@@ -79,10 +86,10 @@ export function AppLayout() {
                   to={item.to}
                   end={item.end}
                   className={({ isActive }) =>
-                    `relative rounded-md px-2.5 py-[7px] text-[13px] transition-colors ${
+                    `relative px-3 py-2 text-[13px] transition-colors duration-150 ${
                       isActive
-                        ? "bg-accentSoft font-semibold text-accentStrong"
-                        : "text-ink-secondary hover:bg-page hover:text-ink-primary"
+                        ? "bg-rail-soft font-semibold text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[2px] before:bg-accent"
+                        : "text-rail-text hover:bg-rail-soft/60 hover:text-white"
                     }`
                   }
                 >
@@ -93,7 +100,7 @@ export function AppLayout() {
           ))}
         </nav>
 
-        <div className="border-t border-edge px-4 py-3.5">
+        <div className="border-t border-rail-edge px-4 py-4">
           <UploadControl onUploaded={reload} />
         </div>
       </aside>
@@ -101,18 +108,18 @@ export function AppLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Keeps the dataset the figures came from visible on every page,
             without it, a screenshot of any single page is unattributable. */}
-        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-edge bg-surface/90 px-6 py-2.5 backdrop-blur lg:px-9">
+        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-edge bg-surface/85 px-6 py-2.5 backdrop-blur-md lg:px-10">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[12px]">
             {current?.group && (
               <>
                 <span className="text-ink-muted">{current.group}</span>
-                <span className="text-ink-muted/60">/</span>
+                <span className="text-ink-muted/50">/</span>
               </>
             )}
-            <span className="font-medium text-ink-secondary">{current?.label ?? "Dashboard"}</span>
+            <span className="font-medium text-ink-primary">{current?.label ?? "Dashboard"}</span>
           </nav>
           {data && (
-            <span className="ml-auto text-[11.5px] text-ink-muted">
+            <span className="ml-auto text-[11px] tracking-wide text-ink-muted">
               {data.summary.source} · {data.summary.row_count.toLocaleString("en-GB")} jobs ·{" "}
               {data.summary.date_range.from} to {data.summary.date_range.to} · figures in{" "}
               {data.summary.base_currency}
@@ -120,9 +127,9 @@ export function AppLayout() {
           )}
         </div>
 
-        <main className="flex-1 px-6 py-7 lg:px-9 lg:py-9">
+        <main className="flex-1 px-6 py-8 lg:px-10 lg:py-10">
           {error && (
-            <div className="mx-auto mb-5 max-w-[1120px] rounded-lg border border-status-critical/25 bg-status-criticalBg px-4 py-3 text-[13px] text-status-criticalText">
+            <div className="mx-auto mb-6 max-w-[1080px] border border-status-critical/20 bg-status-criticalBg px-4 py-3 text-[13px] text-status-criticalText">
               {error}
             </div>
           )}
@@ -131,7 +138,11 @@ export function AppLayout() {
               Loading dashboard. Training models on first load…
             </div>
           )}
-          {data && <Outlet />}
+          {data && (
+            <div key={pathname} className="page-enter">
+              <Outlet />
+            </div>
+          )}
         </main>
       </div>
     </div>

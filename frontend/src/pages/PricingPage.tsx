@@ -11,7 +11,7 @@ export function PricingPage() {
   const { pricing } = useLoadedDashboardData();
 
   return (
-    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
+    <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
       <PageTitle eyebrow="Pricing Integrity" title={pricing.brief.title} />
       <Brief brief={pricing.brief} />
 

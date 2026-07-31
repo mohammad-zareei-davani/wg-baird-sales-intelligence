@@ -26,7 +26,7 @@ export function UploadControl({ onUploaded }: { onUploaded: () => void }) {
   return (
     <div className="flex flex-col gap-2">
       <label
-        className={`flex cursor-pointer items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-center text-[12.5px] font-semibold text-white shadow-card transition-colors hover:bg-accentStrong ${
+        className={`flex cursor-pointer items-center justify-center gap-2 bg-accent px-3 py-2.5 text-center text-[12.5px] font-semibold text-white transition-colors duration-150 hover:bg-accentStrong ${
           busy ? "pointer-events-none opacity-70" : ""
         }`}
       >
@@ -36,7 +36,7 @@ export function UploadControl({ onUploaded }: { onUploaded: () => void }) {
         {busy ? "Loading…" : "Upload new data"}
         <input ref={inputRef} type="file" accept=".xlsx,.xls" onChange={handleChange} disabled={busy} hidden />
       </label>
-      {status && <span className="text-[11px] leading-snug text-ink-muted">{status}</span>}
+      {status && <span className="text-[11px] leading-snug text-rail-muted">{status}</span>}
     </div>
   );
 }

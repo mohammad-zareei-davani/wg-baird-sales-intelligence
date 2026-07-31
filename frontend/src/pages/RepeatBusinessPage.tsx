@@ -12,7 +12,7 @@ export function RepeatBusinessPage() {
   const s = repeatBusiness.summary;
 
   return (
-    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
+    <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
       <PageTitle eyebrow="Recurring Revenue" title={repeatBusiness.brief.title} />
       <Brief brief={repeatBusiness.brief} />
 

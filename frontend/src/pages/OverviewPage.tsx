@@ -33,13 +33,13 @@ export function OverviewPage() {
   ];
 
   return (
-    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
+    <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
       <PageTitle eyebrow="Executive Briefing" title="What the Data Is Telling You" />
 
       <MetricRow metrics={metrics} />
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-[15px] font-semibold text-ink-primary">
+      <section className="flex flex-col gap-0">
+        <h2 className="mb-5 font-display text-[20px] font-semibold tracking-[-0.01em] text-ink-primary">
           The five findings that most warrant attention
         </h2>
 
@@ -48,16 +48,16 @@ export function OverviewPage() {
           return (
             <article
               key={f.area}
-              className="rounded-lg border border-edge bg-surface px-5 py-4 shadow-card"
+              className="border-t border-edge py-5 first:border-t-0 first:pt-0"
             >
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="tnum text-[12px] font-semibold text-ink-muted">
+                <span className="tnum text-[12px] font-semibold text-accent">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <h3 className="text-[14.5px] font-semibold text-ink-primary">{f.title}</h3>
+                <h3 className="text-[15px] font-semibold text-ink-primary">{f.title}</h3>
                 {meta && (
                   <Link
-                    className="ml-auto whitespace-nowrap text-[12px] font-semibold text-accentStrong hover:underline"
+                    className="ml-auto whitespace-nowrap text-[12px] font-semibold text-accentStrong transition-colors hover:text-accent"
                     to={meta.to}
                   >
                     {meta.label} →
@@ -65,16 +65,16 @@ export function OverviewPage() {
                 )}
               </div>
 
-              <div className="mt-3 grid gap-4 md:grid-cols-[170px_1fr] md:gap-7">
+              <div className="mt-4 grid gap-5 md:grid-cols-[180px_1fr] md:gap-8">
                 <div>
-                  <div className="tnum text-[28px] font-semibold leading-none tracking-[-0.025em] text-accentStrong">
+                  <div className="tnum text-[30px] font-semibold leading-none tracking-[-0.03em] text-accentStrong">
                     {f.value}
                   </div>
-                  <div className="mt-1.5 text-[12px] leading-snug text-ink-secondary">
+                  <div className="mt-2 text-[12px] leading-snug text-ink-secondary">
                     {f.caption}
                   </div>
                 </div>
-                <p className="max-w-[74ch] text-[13.5px] leading-[1.65] text-ink-secondary">
+                <p className="max-w-[74ch] text-[14px] leading-[1.7] text-ink-secondary">
                   {f.body}
                 </p>
               </div>
@@ -83,9 +83,9 @@ export function OverviewPage() {
         })}
       </section>
 
-      <div className="border-t border-edge pt-6">
+      <div className="border-t border-edge pt-8">
         <BreakdownTable breakdown={summary.brief.breakdown} />
-        <p className="mt-3 max-w-[80ch] text-[12.5px] leading-relaxed text-ink-muted">
+        <p className="mt-4 max-w-[80ch] text-[13px] leading-relaxed text-ink-muted">
           {summary.brief.hero.body}
         </p>
       </div>

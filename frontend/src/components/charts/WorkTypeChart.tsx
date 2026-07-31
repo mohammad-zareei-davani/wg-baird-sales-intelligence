@@ -30,7 +30,7 @@ export function WorkTypeChart({ data }: { data: WorkTypeBreakdown[] }) {
             `Value added (${item.payload.jobs} jobs)`,
           ]}
         />
-        <Bar dataKey="va" radius={[3, 3, 0, 0]} maxBarSize={56}>
+        <Bar dataKey="va" radius={[0, 0, 0, 0]} maxBarSize={56}>
           {chartData.map((entry, i) => (
             <Cell key={entry.name} fill={SERIES[i % SERIES.length]} />
           ))}

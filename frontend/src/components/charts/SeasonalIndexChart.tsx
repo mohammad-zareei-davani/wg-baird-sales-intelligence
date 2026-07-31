@@ -33,7 +33,7 @@ export function SeasonalIndexChart({ data }: { data: SeasonalIndexRow[] }) {
           contentStyle={tooltipStyle}
           formatter={(value: number) => [`${value.toFixed(0)}% of an average month`, "Level"]}
         />
-        <Bar dataKey="index" radius={[3, 3, 0, 0]} maxBarSize={34}>
+        <Bar dataKey="index" radius={[0, 0, 0, 0]} maxBarSize={34}>
           {chartData.map((entry) => (
             <Cell key={entry.name} fill={entry.index >= 100 ? SERIES[0] : SERIES[3]} />
           ))}

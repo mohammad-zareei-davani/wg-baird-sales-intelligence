@@ -12,7 +12,7 @@ export function DeliveryPage() {
   const { delivery } = useLoadedDashboardData();
 
   return (
-    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
+    <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
       <PageTitle eyebrow="Production Turnaround" title={delivery.brief.title} />
       <Brief brief={delivery.brief} />
 

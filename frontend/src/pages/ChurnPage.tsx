@@ -8,7 +8,7 @@ export function ChurnPage() {
   const { churn } = useLoadedDashboardData();
 
   return (
-    <div className="mx-auto flex max-w-[1120px] flex-col gap-6">
+    <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
       <PageTitle eyebrow="Account Retention" title={churn.brief.title} />
       <Brief brief={churn.brief} />
 
