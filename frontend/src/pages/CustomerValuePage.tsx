@@ -1,5 +1,7 @@
 import { useLoadedDashboardData } from "../data/DashboardDataContext";
 import { Panel } from "../components/Panel";
+import { PageHeader } from "../components/PageHeader";
+import { StoryPanel } from "../components/StoryPanel";
 import { StatCallout, StatCalloutRow } from "../components/StatCallout";
 import { CustomerValueChart } from "../components/charts/CustomerValueChart";
 import { WorkTypeChart } from "../components/charts/WorkTypeChart";
@@ -13,14 +15,12 @@ export function CustomerValuePage() {
 
   return (
     <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
-      <div>
-        <h1 className="mb-1.5 text-2xl font-bold">Most valuable customers &amp; types of work</h1>
-        <p className="max-w-[720px] text-sm leading-relaxed text-ink-secondary">
-          Customers ranked by Value Added (VA) — what the business keeps after paper, press and
-          purchase costs — rather than raw sell price, since VA is the better proxy for how much a
-          relationship is actually worth.
-        </p>
-      </div>
+      <PageHeader
+        title="Most valuable customers & types of work"
+        description="Customers ranked by Value Added — what the business keeps after paper, press and bought-in costs — rather than raw sell price, since VA is the better measure of what a relationship is actually worth."
+      />
+
+      <StoryPanel story={customerValue.story} />
 
       <StatCalloutRow>
         <StatCallout value={String(customerValue.concentration.customer_count)} label="Total customers" />

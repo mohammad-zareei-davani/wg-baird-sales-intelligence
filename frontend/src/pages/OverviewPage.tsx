@@ -2,75 +2,108 @@ import { Link } from "react-router-dom";
 import { useLoadedDashboardData } from "../data/DashboardDataContext";
 import { KpiStrip } from "../components/KpiStrip";
 import type { Kpi } from "../components/KpiStrip";
+import { PageHeader } from "../components/PageHeader";
 import { Panel } from "../components/Panel";
-import { CustomerValueChart } from "../components/charts/CustomerValueChart";
-import { ChurnStatusChart } from "../components/charts/ChurnStatusChart";
-import { formatCurrencyCompact, formatNumber, formatPct } from "../format";
+import { formatCurrency, formatCurrencyCompact, formatNumber, formatPct } from "../format";
+
+const AREA_META: Record<string, { title: string; to: string }> = {
+  pricing: { title: "Pricing discipline", to: "/pricing" },
+  customer_value: { title: "Customer value", to: "/customer-value" },
+  repeat_business: { title: "Repeat & reprint work", to: "/repeat-business" },
+  churn: { title: "Customer churn", to: "/churn" },
+  seasonality: { title: "Seasonality & capacity", to: "/seasonality" },
+};
 
 export function OverviewPage() {
-  const { summary, customerValue, reorder, churn } = useLoadedDashboardData();
+  const { summary, executive } = useLoadedDashboardData();
 
   const kpis: Kpi[] = [
-    { label: "Total sell price", value: formatCurrencyCompact(summary.total_sell_price) },
+    { label: "Total sales", value: formatCurrencyCompact(summary.total_sell_price), hint: `${summary.base_currency} equivalent` },
     {
       label: "Total value added",
       value: formatCurrencyCompact(summary.total_va_amount),
       hint: `${formatPct(summary.avg_va_pct)} avg VA%`,
     },
-    { label: "Active customers", value: formatNumber(summary.customer_count) },
+    { label: "Customers", value: formatNumber(summary.customer_count) },
     { label: "Jobs analysed", value: formatNumber(summary.row_count) },
     { label: "Data window", value: `${summary.date_range.from} → ${summary.date_range.to}` },
   ];
 
   return (
     <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
-      <div>
-        <h1 className="mb-1.5 text-2xl font-bold">Overview</h1>
-        <p className="max-w-[720px] text-sm leading-relaxed text-ink-secondary">
-          Headline numbers across the three commercial insights below.
-        </p>
-      </div>
+      <PageHeader
+        title="Executive summary"
+        description="The findings from this dataset that most warrant senior attention, each linking through to the detail behind it."
+      />
 
       <KpiStrip items={kpis} />
 
-      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
-        <Panel
-          title="Most valuable customers"
-          subtitle={`Top accounts by Value Added — ${customerValue.concentration.pct_of_customers_for_80pct_value}% of customers drive 80% of VA`}
-        >
-          <CustomerValueChart data={customerValue.top_customers.slice(0, 8)} />
-          <Link className="mt-3.5 inline-block text-[13px] font-semibold text-series-1 hover:underline" to="/customer-value">
-            View full customer & work-type breakdown →
-          </Link>
-        </Panel>
+      <section className="rounded-xl border border-black/10 bg-raised p-5">
+        <h2 className="mb-4 text-base font-semibold">What the data is telling us</h2>
+        <ol className="flex flex-col gap-4">
+          {executive.findings.map((f, i) => {
+            const meta = AREA_META[f.area];
+            return (
+              <li key={f.area} className="flex gap-3.5">
+                <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-series-1 text-xs font-bold text-white">
+                  {i + 1}
+                </span>
+                <div>
+                  <p className="text-sm leading-relaxed text-ink-primary">{f.headline}</p>
+                  {meta && (
+                    <Link className="mt-1 inline-block text-[12px] font-semibold text-series-1 hover:underline" to={meta.to}>
+                      {meta.title} →
+                    </Link>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
 
-        <Panel title="Reorder outlook" subtitle="Forecast status across all customers with enough order history">
-          <ul className="mb-2 flex flex-col gap-2.5">
-            <li className="flex items-baseline justify-between border-b border-line-grid py-2 text-[13px]">
-              <span className="text-ink-secondary">Overdue</span>
-              <span className="font-bold tabular-nums">{reorder.summary.overdue_count}</span>
-            </li>
-            <li className="flex items-baseline justify-between border-b border-line-grid py-2 text-[13px]">
-              <span className="text-ink-secondary">Due within 14 days</span>
-              <span className="font-bold tabular-nums">{reorder.summary.due_soon_count}</span>
-            </li>
-            <li className="flex items-baseline justify-between border-b border-line-grid py-2 text-[13px]">
-              <span className="text-ink-secondary">Expected value, next 30 days</span>
-              <span className="font-bold tabular-nums">{formatCurrencyCompact(reorder.summary.expected_value_next_30_days)}</span>
-            </li>
-          </ul>
-          <Link className="mt-3.5 inline-block text-[13px] font-semibold text-series-1 hover:underline" to="/reorder">
-            View full reorder forecast →
-          </Link>
-        </Panel>
+      <Panel
+        title="A note on the figures"
+        subtitle="Worth stating up front, because it changes the headline numbers"
+      >
+        <p className="text-[13px] leading-relaxed text-ink-secondary">{summary.story.what_it_means}</p>
 
-        <Panel title="Churn status" subtitle={`${formatCurrencyCompact(churn.dormant_lifetime_value_at_stake)} of lifetime value sits with dormant accounts`}>
-          <ChurnStatusChart counts={churn.status_counts} />
-          <Link className="mt-3.5 inline-block text-[13px] font-semibold text-series-1 hover:underline" to="/churn">
-            View follow-up opportunities →
-          </Link>
-        </Panel>
-      </div>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full border-collapse text-[13px]">
+            <thead>
+              <tr>
+                <th className="px-2.5 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Billed in</th>
+                <th className="px-2.5 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Jobs</th>
+                <th className="px-2.5 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Native value</th>
+                <th className="px-2.5 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  Converted ({summary.base_currency})
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {summary.currency_split.map((c) => (
+                <tr key={c.currency}>
+                  <td className="whitespace-nowrap border-t border-line-grid px-2.5 py-2">{c.currency}</td>
+                  <td className="whitespace-nowrap border-t border-line-grid px-2.5 py-2">{formatNumber(c.job_count)}</td>
+                  <td className="whitespace-nowrap border-t border-line-grid px-2.5 py-2 tabular-nums">
+                    {formatNumber(Math.round(c.sell_price_native))}
+                  </td>
+                  <td className="whitespace-nowrap border-t border-line-grid px-2.5 py-2 tabular-nums">
+                    {formatCurrency(c.sell_price_base)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <p className="mt-3 text-[12px] text-ink-muted">
+          Converted at €1 = {summary.base_currency_symbol}
+          {summary.eur_to_gbp} — a stated planning rate, not a live feed. Adding the two columns
+          untouched would report {formatCurrency(summary.naive_mixed_total)}, overstating the book by{" "}
+          {formatCurrency(summary.naive_mixed_total - summary.total_sell_price)}.
+        </p>
+      </Panel>
     </div>
   );
 }

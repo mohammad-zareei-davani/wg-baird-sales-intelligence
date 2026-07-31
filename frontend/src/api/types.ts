@@ -1,12 +1,33 @@
+export interface Story {
+  headline: string;
+  what_it_means: string;
+  recommended_action: string;
+}
+
+export interface CurrencySplit {
+  currency: string;
+  job_count: number;
+  sell_price_native: number;
+  sell_price_base: number;
+}
+
 export interface Summary {
   row_count: number;
   customer_count: number;
   total_sell_price: number;
   total_va_amount: number;
   avg_va_pct: number;
+  naive_mixed_total: number;
+  currency_split: CurrencySplit[];
   date_range: { from: string; to: string };
+  base_currency: string;
+  base_currency_symbol: string;
+  eur_to_gbp: number;
   source: string;
+  story: Story;
 }
+
+/* ---------- Customer value ---------- */
 
 export interface TopCustomer {
   customer_id: string;
@@ -18,6 +39,9 @@ export interface TopCustomer {
   avg_va_pct: number;
   last_order: string;
   first_order: string;
+  industry: string;
+  region: string;
+  rep: string;
   top_work_type: string;
   value_share_pct: number;
 }
@@ -30,15 +54,38 @@ export interface WorkTypeBreakdown {
   avg_va_pct: number;
 }
 
+export interface ProductBreakdown {
+  product_type: string;
+  total_va_amount: number;
+  total_sell_price: number;
+  job_count: number;
+  avg_va_pct: number;
+}
+
+export interface IndustryBreakdown {
+  industry: string;
+  total_va_amount: number;
+  job_count: number;
+  customer_count: number;
+}
+
 export interface CustomerValueResponse {
   top_customers: TopCustomer[];
   work_type_breakdown: WorkTypeBreakdown[];
+  product_breakdown: ProductBreakdown[];
+  industry_breakdown: IndustryBreakdown[];
   concentration: {
     customer_count: number;
     customers_for_80pct_value: number;
     pct_of_customers_for_80pct_value: number;
+    top_customer_name: string | null;
+    top_customer_share_pct: number;
+    top_5_share_pct: number;
   };
+  story: Story;
 }
+
+/* ---------- Reorder ---------- */
 
 export type ReorderStatus = "Overdue" | "Due soon" | "On track" | "Insufficient history";
 
@@ -64,7 +111,10 @@ export interface ReorderResponse {
     due_soon_count: number;
     expected_value_next_30_days: number;
   };
+  story: Story;
 }
+
+/* ---------- Churn (rules) ---------- */
 
 export type ChurnStatus = "Active" | "At Risk" | "Dormant";
 
@@ -89,4 +139,267 @@ export interface ChurnResponse {
   follow_up_opportunities: ChurnCustomer[];
   status_counts: Record<ChurnStatus, number>;
   dormant_lifetime_value_at_stake: number;
+  story: Story;
+}
+
+/* ---------- Pricing ---------- */
+
+export interface DiscountByCustomer {
+  customer_name: string;
+  discount_total: number;
+  discounted_jobs: number;
+  sell_total: number;
+  all_jobs: number;
+  discount_as_pct_of_sales: number;
+}
+
+export interface DiscountBucket {
+  name: string;
+  discount_total: number;
+  discounted_jobs: number;
+  all_jobs: number;
+  sell_total: number;
+  discount_as_pct_of_sales: number;
+}
+
+export interface BelowCostCustomer {
+  customer_name: string;
+  job_count: number;
+  va_amount: number;
+  sell_price: number;
+}
+
+export interface PricingResponse {
+  summary: {
+    total_jobs: number;
+    overridden_jobs: number;
+    overridden_pct: number;
+    discounted_jobs: number;
+    uplifted_jobs: number;
+    discount_total: number;
+    uplift_total: number;
+    net_adjustment: number;
+    discount_as_pct_of_sales: number;
+    below_cost_jobs: number;
+    below_cost_va: number;
+    low_margin_jobs: number;
+    low_margin_pct: number;
+    low_margin_sell_value: number;
+    worst_below_cost_customer: string | null;
+    worst_below_cost_share_pct: number;
+    top_discount_customer: string | null;
+    top_discount_amount: number;
+  };
+  discount_by_customer: DiscountByCustomer[];
+  discount_by_rep: DiscountBucket[];
+  discount_by_work_type: DiscountBucket[];
+  below_cost_by_customer: BelowCostCustomer[];
+  story: Story;
+}
+
+/* ---------- Seasonality ---------- */
+
+export interface MonthlyRow {
+  month_start: string;
+  sell_price: number;
+  va_amount: number;
+  press_hours: number;
+  impressions: number;
+  job_count: number;
+}
+
+export interface SeasonalIndexRow {
+  month_num: number;
+  month_name: string;
+  avg_value: number;
+  seasonal_index: number;
+}
+
+export interface ForecastRow {
+  month_start: string;
+  forecast: number;
+}
+
+export interface SeasonalityResponse {
+  monthly: MonthlyRow[];
+  sales_seasonal_index: SeasonalIndexRow[];
+  press_seasonal_index: SeasonalIndexRow[];
+  sales_forecast: ForecastRow[];
+  press_forecast: ForecastRow[];
+  peak_month_mix: { industry: string; sell_price: number }[];
+  summary: {
+    peak_month: string;
+    peak_index: number;
+    trough_month: string;
+    trough_index: number;
+    peak_to_trough_ratio: number | null;
+    sales_forecast_mape: number | null;
+    press_forecast_mape: number | null;
+    forecast_horizon_months: number;
+    press_hours_peak_month: number;
+    press_hours_recent_avg: number;
+    forecast_next_month_sales: number | null;
+    forecast_next_month_press: number | null;
+  };
+  story: Story;
+}
+
+/* ---------- Delivery ---------- */
+
+export interface DeliveryByWorkType {
+  work_type: string;
+  job_count: number;
+  median_days: number;
+  mean_days: number;
+  p90_days: number;
+}
+
+export interface DeliveryByProduct {
+  product_type: string;
+  job_count: number;
+  median_days: number;
+  p90_days: number;
+  sell_price: number;
+}
+
+export interface DeliveryResponse {
+  summary: {
+    jobs_measured: number;
+    coverage_pct: number;
+    median_days: number;
+    mean_days: number;
+    p90_days: number;
+    fastest_work_type: string;
+    fastest_median_days: number;
+    slowest_work_type: string;
+    slowest_median_days: number;
+    recent_vs_prior_days: number;
+    direction: string;
+  };
+  by_work_type: DeliveryByWorkType[];
+  by_product: DeliveryByProduct[];
+  monthly_trend: { month_start: string; median_days: number; job_count: number }[];
+  slowest_jobs: {
+    job_id: string;
+    customer_name: string;
+    product_type: string;
+    work_type: string;
+    lead_time_days: number;
+    days_over_product_norm: number;
+    sell_price: number;
+  }[];
+  story: Story;
+}
+
+/* ---------- Repeat business ---------- */
+
+export interface RepeatTitle {
+  customer_id: string;
+  customer_name: string;
+  job_id: string;
+  print_runs: number;
+  first_run: string;
+  last_run: string;
+  total_sell: number;
+  total_va: number;
+  total_quantity: number;
+  product_type: string;
+  avg_cycle_days: number;
+  days_since_last_run: number;
+  cycles_overdue: number;
+  avg_value_per_run: number;
+}
+
+export interface RepeatBusinessResponse {
+  summary: {
+    distinct_titles: number;
+    repeat_titles: number;
+    one_off_titles: number;
+    repeat_title_pct: number;
+    repeat_revenue: number;
+    repeat_revenue_pct: number;
+    avg_runs_per_repeat_title: number;
+    max_runs: number;
+    titles_due_reprint: number;
+    reprint_pipeline_value: number;
+  };
+  due_for_reprint: RepeatTitle[];
+  top_repeat_titles: RepeatTitle[];
+  by_product: { product_type: string; titles: number; total_sell: number; runs: number }[];
+  story: Story;
+}
+
+/* ---------- ML: Quote Guard ---------- */
+
+export interface QuoteGuardResponse {
+  available: boolean;
+  reason?: string;
+  metrics?: {
+    r2_log: number;
+    mae: number;
+    median_abs_pct_error: number;
+    within_10pct: number;
+    within_25pct: number;
+    train_rows: number;
+    test_rows: number;
+  };
+  threshold_pct?: number;
+  flagged_count?: number;
+  flagged_share_pct?: number;
+  value_gap?: number;
+  flagged_jobs?: {
+    job_id: string;
+    customer_name: string;
+    product_type: string;
+    work_type: string;
+    quantity: number;
+    actual_price: number;
+    expected_price: number;
+    gap: number;
+    gap_pct: number;
+  }[];
+  features_used?: string[];
+  story: Story;
+}
+
+/* ---------- ML: Churn risk ---------- */
+
+export interface ChurnRiskCustomer {
+  customer_id: string;
+  customer_name: string;
+  risk_score: number;
+  order_probability: number;
+  risk_band: "High" | "Medium" | "Low";
+  days_since_last_order: number;
+  avg_interval_days: number;
+  orders_last_365d: number;
+  va_last_90d: number;
+}
+
+export interface ChurnRiskResponse {
+  available: boolean;
+  reason?: string;
+  metrics?: {
+    auc: number;
+    baseline_auc: number;
+    beats_baseline: boolean;
+    accuracy: number;
+    base_rate: number;
+    train_rows: number;
+    test_rows: number;
+    customers: number;
+    lookahead_days: number;
+    train_period_end: string;
+  };
+  current_risk?: ChurnRiskCustomer[];
+  band_counts?: Record<string, number>;
+  features_used?: string[];
+  story: Story;
+}
+
+/* ---------- Executive summary ---------- */
+
+export interface ExecutiveSummaryResponse {
+  findings: { area: string; headline: string }[];
+  stories: Record<string, Story>;
 }

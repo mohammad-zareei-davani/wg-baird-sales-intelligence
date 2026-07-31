@@ -36,8 +36,8 @@ def churn_analysis(df: pd.DataFrame, as_of: pd.Timestamp) -> dict:
         df.groupby(["customer_id", "customer_name"], as_index=False)
         .agg(
             order_dates=("sales_in", lambda s: sorted(s.unique())),
-            lifetime_va=("va_amount", "sum"),
-            lifetime_sell=("sell_price", "sum"),
+            lifetime_va=("va_amount_base", "sum"),
+            lifetime_sell=("sell_price_base", "sum"),
             job_count=("job_id", "count"),
             industry=("industry", "first"),
             region=("region", "first"),

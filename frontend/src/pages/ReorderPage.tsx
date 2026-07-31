@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useLoadedDashboardData } from "../data/DashboardDataContext";
 import { Panel } from "../components/Panel";
+import { PageHeader } from "../components/PageHeader";
+import { StoryPanel } from "../components/StoryPanel";
 import { ReorderTable } from "../components/ReorderTable";
 import { StatCallout, StatCalloutRow } from "../components/StatCallout";
 import { formatCurrencyCompact, formatNumber } from "../format";
@@ -25,14 +27,12 @@ export function ReorderPage() {
 
   return (
     <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
-      <div>
-        <h1 className="mb-1.5 text-2xl font-bold">Reorder values &amp; predicted timelines</h1>
-        <p className="max-w-[720px] text-sm leading-relaxed text-ink-secondary">
-          Every distinct booking date is treated as one order event. From each customer's sequence of
-          order events we derive their average reorder cadence and forecast the next order date and
-          value with a moving average — a transparent baseline, easy to swap for a trained model later.
-        </p>
-      </div>
+      <PageHeader
+        title="Reorder values & predicted timelines"
+        description="Every distinct booking date counts as one order event. From each customer's sequence of orders we derive their normal reorder rhythm and project the next order date and value — a transparent baseline anyone can reconstruct by hand."
+      />
+
+      <StoryPanel story={reorder.story} />
 
       <StatCalloutRow>
         <StatCallout value={formatNumber(reorder.summary.predictable_customers)} label="Customers with a forecast" />

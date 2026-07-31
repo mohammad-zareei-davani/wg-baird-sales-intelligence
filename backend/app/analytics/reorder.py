@@ -29,7 +29,7 @@ def _regularity_label(cv: float) -> str:
 def reorder_predictions(df: pd.DataFrame, as_of: pd.Timestamp, recent_n: int = 3) -> dict:
     orders = (
         df.groupby(["customer_id", "customer_name", "sales_in"], as_index=False)
-        .agg(order_value=("sell_price", "sum"), order_va=("va_amount", "sum"))
+        .agg(order_value=("sell_price_base", "sum"), order_va=("va_amount_base", "sum"))
         .sort_values(["customer_id", "sales_in"])
     )
 

@@ -18,6 +18,7 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy import text
 
+from app.config import FX_RATES, LOW_MARGIN_VA_PCT, MAX_PLAUSIBLE_LEAD_DAYS
 from app.db import JOBS_COLUMNS, engine, init_db, jobs_row_count, record_upload, upload_history
 
 DEFAULT_DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "raw" / "sample_data.xlsx"
@@ -93,6 +94,61 @@ def load_dataframe(path: Path | str) -> pd.DataFrame:
     return df.reset_index(drop=True)
 
 
+# Money columns recorded in the customer's home currency. Summing these raw
+# across a mixed-currency book adds euros to pounds, so analytics use the
+# converted "<name>_base" versions instead.
+MONEY_COLUMNS = [
+    "sell_price", "va_amount", "purchases", "manual_adjustment", "paper",
+    "labour", "handling", "markup_net", "amount_invoiced", "rebate",
+    "va_per_24", "va_per_k",
+]
+
+
+def _canonical_product_types(series: pd.Series) -> pd.Series:
+    """Merge spelling variants of the same product type.
+
+    The source data carries 64 distinct product_type values, but several
+    are the same category typed differently ("Brochures / Price List" vs
+    "Brochures / Price LIst", "Leaflets to A4/ Price Lists" vs "Leaflets
+    to A4 /Price Lists"). Grouping on an alphanumeric-only key merges those
+    safely, and each group adopts its most common spelling as the label.
+    Genuinely different labels are left alone.
+    """
+    values = series.fillna("Unspecified").astype(str).str.strip()
+    key = values.str.lower().str.replace(r"[^a-z0-9]", "", regex=True)
+    canonical = (
+        pd.DataFrame({"key": key, "value": values})
+        .groupby(["key", "value"]).size().rename("n").reset_index()
+        .sort_values(["key", "n"], ascending=[True, False])
+        .drop_duplicates("key").set_index("key")["value"]
+    )
+    return key.map(canonical).fillna(values)
+
+
+def derive_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Add the reporting-ready columns the analytics modules consume."""
+    df = df.copy()
+
+    df["fx_rate"] = df["currency"].map(FX_RATES).fillna(1.0)
+    for col in MONEY_COLUMNS:
+        df[f"{col}_base"] = df[col] * df["fx_rate"]
+
+    df["product_type_clean"] = _canonical_product_types(df["product_type"])
+
+    lead = (df["ship_date"] - df["sales_in"]).dt.days
+    # Negative or absurdly long gaps are cancelled/reopened jobs, not real
+    # turnaround, so they are excluded rather than allowed to skew averages.
+    df["lead_time_days"] = lead.where((lead >= 0) & (lead <= MAX_PLAUSIBLE_LEAD_DAYS))
+
+    df["is_below_cost"] = df["va_amount"] < 0
+    df["is_low_margin"] = df["va_pct"] < LOW_MARGIN_VA_PCT
+    # Named month_start so it does not clobber the source "month" integer,
+    # which is part of the persisted schema.
+    df["month_start"] = df["sales_in"].dt.to_period("M").dt.to_timestamp()
+
+    return df
+
+
 def _write_to_db(df: pd.DataFrame, source_name: str) -> None:
     with engine.begin() as conn:
         conn.execute(text("DELETE FROM jobs"))
@@ -125,8 +181,11 @@ class DataStore:
             df = _read_from_db()
 
         history = upload_history()
-        self._df = df
+        self._df = derive_columns(df)
         self._source_name = history[0]["source_name"] if history else self._default_path.name
+        # Bumped whenever the dataset changes, so cached model fits are
+        # invalidated rather than served against stale data.
+        self._version = 0
 
     def get(self) -> pd.DataFrame:
         with self._lock:
@@ -136,9 +195,15 @@ class DataStore:
         new_df = load_dataframe(path)
         _write_to_db(new_df, source_name)
         with self._lock:
-            self._df = new_df
+            self._df = derive_columns(new_df)
             self._source_name = source_name
+            self._version += 1
         return len(new_df)
+
+    @property
+    def version(self) -> int:
+        with self._lock:
+            return self._version
 
     @property
     def source_name(self) -> str:

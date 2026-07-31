@@ -1,5 +1,7 @@
 import { useLoadedDashboardData } from "../data/DashboardDataContext";
 import { Panel } from "../components/Panel";
+import { PageHeader } from "../components/PageHeader";
+import { StoryPanel } from "../components/StoryPanel";
 import { StatCallout, StatCalloutRow } from "../components/StatCallout";
 import { ChurnStatusChart } from "../components/charts/ChurnStatusChart";
 import { FollowUpTable } from "../components/FollowUpTable";
@@ -10,15 +12,12 @@ export function ChurnPage() {
 
   return (
     <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
-      <div>
-        <h1 className="mb-1.5 text-2xl font-bold">Customer churn &amp; follow-up opportunities</h1>
-        <p className="max-w-[720px] text-sm leading-relaxed text-ink-secondary">
-          Dormancy is scored against each customer's own historical ordering cadence — a customer who
-          usually orders every 2 weeks going quiet for 45 days is a much stronger signal than the same
-          gap for a customer who orders twice a year. Customers with a single order fall back to fixed
-          thresholds, since they have no cadence to compare against.
-        </p>
-      </div>
+      <PageHeader
+        title="Customer churn & follow-up opportunities"
+        description="Silence is judged against each customer's own ordering habit. Six weeks of quiet from a fortnightly customer is a genuine warning; the same six weeks from a twice-a-year customer means nothing. Accounts with too little history to have a habit fall back to fixed thresholds."
+      />
+
+      <StoryPanel story={churn.story} />
 
       <StatCalloutRow>
         <StatCallout value={formatNumber(churn.status_counts.Active)} label="Active" accent="good" />

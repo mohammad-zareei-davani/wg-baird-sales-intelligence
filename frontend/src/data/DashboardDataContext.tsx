@@ -1,13 +1,32 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { api } from "../api/client";
-import type { ChurnResponse, CustomerValueResponse, ReorderResponse, Summary } from "../api/types";
+import type {
+  ChurnResponse,
+  ChurnRiskResponse,
+  CustomerValueResponse,
+  DeliveryResponse,
+  ExecutiveSummaryResponse,
+  PricingResponse,
+  QuoteGuardResponse,
+  RepeatBusinessResponse,
+  ReorderResponse,
+  SeasonalityResponse,
+  Summary,
+} from "../api/types";
 
 export interface DashboardData {
   summary: Summary;
   customerValue: CustomerValueResponse;
   reorder: ReorderResponse;
   churn: ChurnResponse;
+  pricing: PricingResponse;
+  seasonality: SeasonalityResponse;
+  delivery: DeliveryResponse;
+  repeatBusiness: RepeatBusinessResponse;
+  quoteGuard: QuoteGuardResponse;
+  churnRisk: ChurnRiskResponse;
+  executive: ExecutiveSummaryResponse;
 }
 
 interface DashboardContextValue {
@@ -28,13 +47,26 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const [summary, customerValue, reorder, churn] = await Promise.all([
+      const [
+        summary, customerValue, reorder, churn, pricing,
+        seasonality, delivery, repeatBusiness, quoteGuard, churnRisk, executive,
+      ] = await Promise.all([
         api.summary(),
         api.customerValue(20),
         api.reorder(),
         api.churn(),
+        api.pricing(),
+        api.seasonality(),
+        api.delivery(),
+        api.repeatBusiness(),
+        api.quoteGuard(),
+        api.churnRisk(),
+        api.executiveSummary(),
       ]);
-      setData({ summary, customerValue, reorder, churn });
+      setData({
+        summary, customerValue, reorder, churn, pricing,
+        seasonality, delivery, repeatBusiness, quoteGuard, churnRisk, executive,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard data");
     } finally {
