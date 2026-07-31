@@ -8,7 +8,10 @@ const AREA_META: Record<string, { label: string; to: string }> = {
   customer_value: { label: "Customer Value", to: "/customer-value" },
   repeat_business: { label: "Recurring Revenue", to: "/repeat-business" },
   churn: { label: "Account Retention", to: "/churn" },
+  reorder: { label: "Reorder Forecasting", to: "/reorder" },
   seasonality: { label: "Demand & Capacity", to: "/seasonality" },
+  delivery: { label: "Production Turnaround", to: "/delivery" },
+  quote_guard: { label: "Quote Intelligence", to: "/quote-guard" },
 };
 
 export function OverviewPage() {
@@ -39,9 +42,16 @@ export function OverviewPage() {
       <MetricRow metrics={metrics} />
 
       <section className="flex flex-col gap-0">
-        <h2 className="mb-5 font-display text-[20px] font-semibold tracking-[-0.01em] text-ink-primary">
-          The five findings that most warrant attention
-        </h2>
+        <div className="mb-5">
+          <h2 className="font-display text-[20px] font-semibold tracking-[-0.01em] text-ink-primary">
+            What most warrants attention
+          </h2>
+          <p className="mt-1.5 max-w-[70ch] text-[13px] leading-relaxed text-ink-secondary">
+            All {executive.considered} insights are scored on what each has at stake per year, and
+            the largest are shown here. Nothing is fixed in place: the order changes with the data,
+            and an insight with nothing behind it drops out.
+          </p>
+        </div>
 
         {executive.findings.map((f, i) => {
           const meta = AREA_META[f.area];
@@ -63,6 +73,12 @@ export function OverviewPage() {
                     {meta.label} →
                   </Link>
                 )}
+              </div>
+
+              {/* Why this finding sits where it does in the list. */}
+              <div className="mt-2 flex flex-wrap items-baseline gap-x-2 text-[12px]">
+                <span className="tnum font-semibold text-ink-primary">{f.at_stake_label}</span>
+                <span className="text-ink-muted">{f.basis.toLowerCase()}</span>
               </div>
 
               <div className="mt-4 grid gap-5 md:grid-cols-[180px_1fr] md:gap-8">

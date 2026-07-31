@@ -17,8 +17,15 @@ export function CustomerValuePage() {
       <Brief brief={customerValue.brief} />
 
       <SupportingCharts>
-        <Panel title="Top customers by value added" subtitle="Top 20 accounts, ranked by lifetime value added">
-          <CustomerValueChart data={customerValue.top_customers} />
+        <Panel
+          title="Top customers by value added"
+          subtitle={`Coloured bars are the ${customerValue.concentration.ahead_count} accounts standing clearly ahead of the field. The dashed line marks the average account, which the rest sit close to.`}
+        >
+          <CustomerValueChart
+            data={customerValue.top_customers}
+            aheadCount={customerValue.concentration.ahead_count}
+            meanVa={customerValue.concentration.mean_va}
+          />
         </Panel>
 
         <Panel title="Value added by work type" subtitle="Litho, Digital, Wide Format and Outwork compared">

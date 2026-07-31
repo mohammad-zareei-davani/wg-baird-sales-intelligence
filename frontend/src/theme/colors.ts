@@ -26,6 +26,8 @@ export const STATUS = {
 } as const;
 
 export const CHART = {
+  /** Bars that are present for context rather than being the point. */
+  neutral: "#a8b0bc",
   gridline: "#e4e7ec",
   axis: "#c5cad3",
   textMuted: "#6e7785",

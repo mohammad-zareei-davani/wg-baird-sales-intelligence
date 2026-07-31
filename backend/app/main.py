@@ -188,17 +188,55 @@ def ml_churn_risk() -> dict:
 
 
 @app.get("/api/executive-summary")
-def exec_summary() -> dict:
+def exec_summary(limit: int = 5) -> dict:
+    """The findings that currently matter most, ranked by what is at stake.
+
+    Every insight is scored, not just a chosen few, so the briefing reorders
+    itself as the data changes and drops anything with nothing behind it.
+    """
     df = _df()
     as_of = _as_of()
-    briefs = {
-        "pricing": narrative.pricing_brief(pricing_analysis(df)),
-        "customer_value": narrative.customer_value_brief(customer_value_summary(df)),
-        "repeat_business": narrative.repeat_business_brief(repeat_business_analysis(df, as_of)),
-        "churn": narrative.churn_brief(churn_analysis(df, as_of)),
-        "seasonality": narrative.seasonality_brief(seasonality_analysis(df)),
+
+    results = {
+        "pricing": pricing_analysis(df),
+        "customer_value": customer_value_summary(df),
+        "repeat_business": repeat_business_analysis(df, as_of),
+        "churn": churn_analysis(df, as_of),
+        "reorder": reorder_predictions(df, as_of=as_of),
+        "seasonality": seasonality_analysis(df),
+        "delivery": delivery_analysis(df),
+        "quote_guard": _price_model(store.version),
     }
-    return {"findings": narrative.executive_summary(briefs), "briefs": briefs}
+    builders = {
+        "pricing": narrative.pricing_brief,
+        "customer_value": narrative.customer_value_brief,
+        "repeat_business": narrative.repeat_business_brief,
+        "churn": narrative.churn_brief,
+        "reorder": narrative.reorder_brief,
+        "seasonality": narrative.seasonality_brief,
+        "delivery": narrative.delivery_brief,
+        "quote_guard": narrative.quote_guard_brief,
+    }
+
+    # Figures accumulated over the whole extract are annualised before being
+    # compared, so a long dataset does not make every historical total look
+    # larger than a genuinely current one.
+    span_days = (df["sales_in"].max() - df["sales_in"].min()).days
+    years = max(span_days / 365.25, 0.25)
+
+    briefs = {area: builders[area](result) for area, result in results.items()}
+    items = [
+        {"area": area, "brief": briefs[area], "result": results[area]}
+        for area in results
+    ]
+    findings = narrative.executive_summary(items, limit=limit, years=years)
+
+    return {
+        "findings": findings,
+        "considered": len(items),
+        "years_of_data": round(years, 2),
+        "briefs": {f["area"]: briefs[f["area"]] for f in findings},
+    }
 
 
 @app.post("/api/data/upload")

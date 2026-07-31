@@ -103,6 +103,21 @@ export interface CustomerValueResponse {
     top_customer_name: string | null;
     top_customer_share_pct: number;
     top_5_share_pct: number;
+    /** Groups derived from the distribution rather than a fixed cut-off. */
+    leading_count: number;
+    leading_names: string[];
+    leading_share_pct: number;
+    tied_count: number;
+    tied_names: string[];
+    tied_spread_pct: number;
+    ahead_count: number;
+    ahead_share_pct: number;
+    break_drop_pct: number;
+    flattens_at_rank: number | null;
+    next_after_leading_share_pct: number;
+    next_after_leading_name: string | null;
+    mean_va: number;
+    first_tail_vs_mean: number | null;
   };
   brief: Brief;
 }
@@ -427,9 +442,17 @@ export interface ExecutiveFinding {
   value: string;
   caption: string;
   body: string;
+  /** Money at stake, used to rank findings against each other. */
+  at_stake: number;
+  at_stake_label: string;
+  /** Plain-English statement of what the at-stake figure measures. */
+  basis: string;
 }
 
 export interface ExecutiveSummaryResponse {
   findings: ExecutiveFinding[];
+  /** How many insights were scored before the top ones were selected. */
+  considered: number;
+  years_of_data: number;
   briefs: Record<string, Brief>;
 }

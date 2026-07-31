@@ -56,6 +56,54 @@ def _plural(n: float, singular: str, plural: str | None = None) -> str:
     return singular if n == 1 else (plural or f"{singular}s")
 
 
+def _names(items: list[str]) -> str:
+    """Join names the way a person would write them."""
+    items = [str(i) for i in items if i]
+    if not items:
+        return "the leading account"
+    if len(items) == 1:
+        return items[0]
+    if len(items) == 2:
+        return f"{items[0]} and {items[1]}"
+    return f"{', '.join(items[:-1])} and {items[-1]}"
+
+
+_WORDS = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five",
+          6: "Six", 7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten"}
+
+
+def _word(n: int) -> str:
+    """Small numbers read better as words at the start of a sentence."""
+    return _WORDS.get(int(n), str(int(n)))
+
+
+_ORDINALS = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth",
+             6: "sixth", 7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth"}
+
+
+def _ordinal(n: int | None) -> str:
+    if n is None:
+        return "next"
+    return _ORDINALS.get(int(n), f"{int(n)}th")
+
+
+def _significance(at_stake: float | None, basis: str, include: bool = True) -> dict:
+    """How much attention a finding deserves, in money terms.
+
+    Findings compete for space in the executive briefing, so each one
+    declares what is actually at stake. Ranking on a common monetary measure
+    is the only comparison a board would accept, and it means a finding with
+    nothing behind it drops out of the briefing automatically rather than
+    occupying a slot by convention.
+    """
+    value = float(at_stake or 0.0)
+    return {
+        "at_stake": round(value, 2),
+        "basis": basis,
+        "include": bool(include and value > 0),
+    }
+
+
 def _metric(label: str, value: str, sublabel: str) -> dict:
     return {"label": label, "value": value, "sublabel": sublabel}
 
@@ -94,23 +142,59 @@ def customer_value_brief(result: dict) -> dict:
         "Outwork": "Produced entirely through external suppliers",
     }
 
+    lead_n = c["leading_count"]
+    tied_n = c["tied_count"]
+    ahead_n = c["ahead_count"]
+    lead_names = _names(c["leading_names"])
+    tied_names = _names(c["tied_names"])
+    shares = {r["customer_name"]: r["value_share_pct"] for r in result["top_customers"]}
+
+    # Describe the top of the chart as it actually looks. Naming a single
+    # winner when two accounts are level would not survive a glance at the
+    # ranked bars.
+    if tied_n > 1:
+        pair = ", ".join(f"{n} at {pct(shares.get(n, 0))}" for n in c["tied_names"])
+        top_sentence = (
+            f"{tied_names} are effectively level at the top ({pair}, "
+            f"{pct(c['tied_spread_pct'])} apart), and together they hold "
+            f"{pct(c['leading_share_pct'])} of value added."
+        )
+        lead_label = f"Top {_word(lead_n).lower()} accounts, level"
+    else:
+        top_sentence = (
+            f"{top} leads clearly on {pct(c['top_customer_share_pct'])} of value added."
+        )
+        lead_label = "Largest account"
+
+    # Where the ranking stops being a ranking.
+    if c["flattens_at_rank"] and ahead_n > lead_n:
+        tail_sentence = (
+            f"{_word(ahead_n)} accounts stand clearly ahead of the rest; from the "
+            f"{_ordinal(c['flattens_at_rank'])} the field flattens out at close to the "
+            f"average account size."
+        )
+    else:
+        tail_sentence = (
+            f"Below them the field is flat, with no account clearly separated from the next."
+        )
+
     return _brief(
         title="Where Your Value Actually Comes From",
         metrics=[
-            _metric("Top five accounts", pct(c["top_5_share_pct"]), "Share of all value added"),
-            _metric("Largest single account", pct(c["top_customer_share_pct"]), f"{top} alone"),
+            _metric(lead_label, pct(c["leading_share_pct"]), f"{lead_names} combined"),
+            _metric("Clearly ahead of the field", count(ahead_n),
+                    f"Holding {pct(c['ahead_share_pct'])} between them"),
             _metric("Accounts for 80% of value", count(c["customers_for_80pct_value"]),
                     f"Of {c['customer_count']} customers"),
         ],
         hero={
-            "value": pct(c["top_5_share_pct"]),
-            "caption": "of value added comes from five accounts",
+            "value": pct(c["leading_share_pct"]),
+            "caption": f"of value added sits with {_word(lead_n).lower()} {_plural(lead_n, 'account')}",
             "body": (
-                f"Five customers generate {pct(c['top_5_share_pct'])} of everything the business "
-                f"keeps after paper, press and bought-in costs, and {top} alone accounts for "
-                f"{pct(c['top_customer_share_pct'])}. Concentration this high is efficient to "
-                f"serve, but it is also the single largest commercial risk on the book. Losing "
-                f"one of these relationships would take years to replace."
+                f"{top_sentence} The next account down, {c['next_after_leading_name']}, is on "
+                f"{pct(c['next_after_leading_share_pct'])}, less than half their size. "
+                f"{tail_sentence} Concentration like this is efficient to serve, but it is the "
+                f"single largest commercial risk on the book."
             ),
         },
         breakdown={
@@ -130,11 +214,13 @@ def customer_value_brief(result: dict) -> dict:
             "title": "How to protect and grow this",
             "items": [
                 _action(
-                    f"Put a named relationship plan behind {top}.",
-                    "Free: one meeting",
+                    f"Put a named relationship plan behind {lead_names}.",
+                    f"Free: {_word(lead_n).lower()} {_plural(lead_n, 'meeting')}",
                     "free",
-                    f"An account worth {pct(c['top_customer_share_pct'])} of value added should "
-                    f"have a board-visible owner, a documented renewal position, and more than one "
+                    f"{_plural(lead_n, 'This account carries', 'These accounts carry')} "
+                    f"{pct(c['leading_share_pct'])} of value added between "
+                    f"{_plural(lead_n, 'it', 'them')}. Work of that size should have a "
+                    f"board-visible owner, a documented renewal position, and more than one "
                     f"relationship inside the customer. Single-contact dependency is how accounts "
                     f"this size get lost without warning.",
                 ),
@@ -143,9 +229,10 @@ def customer_value_brief(result: dict) -> dict:
                     "Planning: quarterly review",
                     "low",
                     f"Only {c['customers_for_80pct_value']} of {c['customer_count']} customers "
-                    f"produce 80% of value. Growing the accounts immediately below the top five is "
-                    f"the fastest way to reduce concentration risk without needing to win new "
-                    f"logos.",
+                    f"produce 80% of value, and below the {_word(ahead_n).lower()} accounts that "
+                    f"stand ahead the field is essentially level. Growing the accounts just below "
+                    f"that group is the fastest way to reduce concentration risk without needing "
+                    f"to win new logos.",
                 ),
                 _action(
                     "Check the value mix, not just the revenue mix.",
@@ -839,18 +926,121 @@ def data_quality_brief(summary: dict) -> dict:
 
 # --- Executive summary ------------------------------------------------------
 
-def executive_summary(briefs: dict[str, dict]) -> list[dict]:
-    """The handful of findings worth a senior manager's attention first."""
-    order = ["pricing", "customer_value", "repeat_business", "churn", "seasonality"]
-    out = []
-    for key in order:
-        brief = briefs.get(key)
-        if brief:
-            out.append({
-                "area": key,
-                "title": brief["title"],
-                "value": brief["hero"]["value"],
-                "caption": brief["hero"]["caption"],
-                "body": brief["hero"]["body"],
-            })
-    return out
+def significance_for(area: str, result: dict, years: float = 1.0) -> dict:
+    """What each insight has at stake, expressed as money per year.
+
+    The executive briefing used to show a fixed list in a fixed order, which
+    meant a finding appeared even when the number behind it was zero, and a
+    large problem could sit below a small one. Scoring every insight on one
+    measure fixes both: the briefing reorders itself around whatever
+    currently matters most, and anything with nothing behind it drops out.
+
+    Two rules keep the comparison honest. Figures accumulated over the whole
+    dataset are divided by its span so everything is an annual rate, and only
+    money genuinely at risk or genuinely recoverable counts. Revenue that
+    merely passed through a slow process is not at stake, so turnaround is
+    deliberately left unscored rather than allowed to dominate the ranking on
+    a number that does not mean what it appears to mean.
+    """
+    span = max(float(years), 0.25)
+
+    try:
+        if area == "customer_value":
+            c = result["concentration"]
+            lead = {r["customer_name"] for r in result["top_customers"][: c["leading_count"]]}
+            annual = sum(
+                r["total_va_amount"] for r in result["top_customers"] if r["customer_name"] in lead
+            ) / span
+            return _significance(annual, "Annual value added riding on the leading accounts")
+
+        if area == "pricing":
+            s = result["summary"]
+            annual = (abs(s["below_cost_va"]) + s["discount_total"]) / span
+            return _significance(annual, "Value given away at quoting each year, plus below-cost work")
+
+        if area == "repeat_business":
+            s = result["summary"]
+            # A present backlog, not a historical total, so it is not divided.
+            return _significance(s["reprint_pipeline_value"], "Reprints now overdue their cycle")
+
+        if area == "churn":
+            annual = result["dormant_lifetime_value_at_stake"] / span
+            return _significance(annual, "Annual value added from accounts that have gone dormant")
+
+        if area == "reorder":
+            # Normal expected trading is not at stake. Only the customers who
+            # are already past their own reorder point are.
+            overdue = [
+                r for r in result.get("customers", [])
+                if r.get("status") == "Overdue" and r.get("predicted_next_order_value")
+            ]
+            at_risk = sum(r["predicted_next_order_value"] for r in overdue)
+            return _significance(at_risk, "Predicted value from customers past their reorder point")
+
+        if area == "seasonality":
+            idx = result.get("sales_seasonal_index") or []
+            if not idx:
+                return _significance(0, "Seasonal swing", include=False)
+            # How much revenue the quiet months fall short of an evenly
+            # loaded year. The plant carries the same fixed cost through
+            # those months, so this is the annual size of the under-loading,
+            # not a swing figure taken from a single month.
+            monthly = [r["avg_value"] for r in idx]
+            level = sum(monthly) / len(monthly)
+            shortfall = sum(max(0.0, level - v) for v in monthly)
+            return _significance(
+                shortfall, "Annual revenue shortfall in the quiet months against even loading"
+            )
+
+        if area == "delivery":
+            # Turnaround is a service measure. The value of slow jobs is
+            # revenue that was delivered and paid for, not money at risk, so
+            # scoring it here would put a misleading figure at the top of the
+            # briefing. The page still reports it in full.
+            return _significance(0, "Service measure, no direct money at risk", include=False)
+
+        if area == "quote_guard":
+            if not result.get("available"):
+                return _significance(0, "Quote benchmark unavailable", include=False)
+            # Measured on the held-out sample only, so scaled to the full book.
+            metrics = result.get("metrics") or {}
+            tested = metrics.get("test_rows") or 0
+            trained = metrics.get("train_rows") or 0
+            scale = ((tested + trained) / tested) if tested else 1.0
+            annual = abs(result.get("value_gap", 0)) * scale / span
+            return _significance(annual, "Annual gap on jobs sold below the going rate")
+    except (KeyError, TypeError, ValueError, ZeroDivisionError):
+        # A malformed or empty result should drop the finding, never break
+        # the briefing for every other insight.
+        return _significance(0, "Not available", include=False)
+
+    return _significance(0, "Not scored", include=False)
+
+
+def executive_summary(items: list[dict], limit: int = 5, years: float = 1.0) -> list[dict]:
+    """Rank the findings by what is at stake and drop the empty ones.
+
+    `items` is a list of {"area", "brief", "result"}. Order is decided here
+    rather than being hard-coded, so the briefing reflects the data in front
+    of it rather than the order the modules happen to be written in.
+    """
+    scored = []
+    for item in items:
+        brief = item.get("brief") or {}
+        hero = brief.get("hero") or {}
+        sig = significance_for(item["area"], item.get("result") or {}, years=years)
+        if not sig["include"]:
+            continue
+        scored.append({
+            "area": item["area"],
+            "title": brief.get("title", ""),
+            "value": hero.get("value", ""),
+            "caption": hero.get("caption", ""),
+            "body": hero.get("body", ""),
+            "at_stake": sig["at_stake"],
+            "at_stake_label": money(sig["at_stake"]),
+            "basis": sig["basis"],
+        })
+
+    scored.sort(key=lambda r: r["at_stake"], reverse=True)
+    return scored[:limit]

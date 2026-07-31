@@ -68,6 +68,13 @@ def delivery_analysis(df: pd.DataFrame, min_jobs: int = 20) -> dict:
     prior = monthly_trend.head(max(len(monthly_trend) - 6, 1))["median_days"].mean()
     trend_change = float(recent - prior) if len(monthly_trend) > 6 else 0.0
 
+    # Sales value sitting in the slow tail. This is what is exposed to
+    # expedite costs and complaints, and it gives turnaround a monetary
+    # weight that can be compared against the other insights.
+    p90 = float(d["lead_time_days"].quantile(0.9))
+    tail_jobs = d[d["lead_time_days"] > p90]
+    tail_value = float(tail_jobs["sell_price_base"].sum())
+
     fastest_row = by_work_type.iloc[0]
     slowest_row = by_work_type.iloc[-1]
 
@@ -84,6 +91,8 @@ def delivery_analysis(df: pd.DataFrame, min_jobs: int = 20) -> dict:
             "slowest_median_days": round(float(slowest_row["median_days"]), 1),
             "recent_vs_prior_days": round(trend_change, 1),
             "direction": "slower" if trend_change > 0.5 else ("faster" if trend_change < -0.5 else "stable"),
+            "tail_job_count": int(len(tail_jobs)),
+            "tail_job_value": round(tail_value, 2),
         },
         "by_work_type": by_work_type.round(1).to_dict(orient="records"),
         "by_product": by_product.round(1).to_dict(orient="records"),
