@@ -1,16 +1,98 @@
 # W&G Baird Sales Intelligence
 
-A dynamic analytics platform over W&G Baird's job-level sales data. FastAPI +
-pandas + scikit-learn on the backend, React/TypeScript + Tailwind on the front,
-SQLite as the store of record.
+Commercial analytics over W&G Baird job-level sales data. The platform turns a
+print-job Excel extract into board-ready briefings: what the number is, what it
+means, and what to do about it — with charts as supporting evidence, not the
+argument.
 
-Every insight page leads with the commercial reading before showing any chart:
-what the number is, what it means, and what to do about it.
+| Layer | Stack |
+| --- | --- |
+| Backend | FastAPI, pandas, scikit-learn, SQLite |
+| Frontend | React, TypeScript, Tailwind CSS, Recharts |
+| Data | Excel interchange → SQLite store of record |
 
-## Architecture diagram
+---
 
-End-to-end flow from Excel input to the dashboard UI. Each box lists the
-techniques, models or outputs used at that stage.
+## Features
+
+| Page | Question answered |
+| --- | --- |
+| **Executive Briefing** | What the data is telling you — five findings that most warrant attention |
+| **Customer Value** | Where value added actually comes from |
+| **Recurring Revenue** | Reprint / repeat work already won |
+| **Reorder Forecasting** | Who is due to order next |
+| **Account Retention** | Customers who have gone quiet relative to their own cadence |
+| **Pricing Integrity** | Margin decided at the point of quoting |
+| **Demand & Capacity** | Shape of the trading year |
+| **Production Turnaround** | How long work takes to leave the building |
+| **Quote Intelligence** | What comparable work actually sells for (ML) |
+| **Retention Risk** | Who is unlikely to order again soon (ML) |
+
+### Page anatomy
+
+Every insight page follows the same structure so readers learn the format once:
+
+1. Three headline metrics  
+2. One key finding (hero figure + short commercial read)  
+3. Breakdown table with plain-English row descriptions  
+4. Numbered actions tagged by cost (free / low cost / value at stake)  
+5. Supporting charts and detail tables underneath  
+
+The UI uses a single light theme, designed for screen reading and boardroom
+projection.
+
+---
+
+## Getting started
+
+Run the API and the UI in **two terminals**. The frontend proxies `/api/*` to
+port `8000`.
+
+**Prerequisites:** Python 3.11+, Node.js 18+.
+
+### Backend
+
+```bash
+cd backend
+python -m venv .venv
+```
+
+Windows (PowerShell):
+
+```bash
+.\.venv\Scripts\pip install -r requirements.txt
+.\.venv\Scripts\python -m uvicorn app.main:app --reload --port 8000
+```
+
+macOS / Linux:
+
+```bash
+./.venv/bin/pip install -r requirements.txt
+./.venv/bin/python -m uvicorn app.main:app --reload --port 8000
+```
+
+API: `http://localhost:8000`  
+On first start, if `data/app.db` is empty, the sample workbook at
+`data/raw/sample_data.xlsx` is loaded. Models train on first request; the
+initial dashboard load may take up to a minute.
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open the URL Vite prints (default `http://localhost:5173`). Keep the backend
+running while using the dashboard.
+
+---
+
+## Architecture
+
+End-to-end flow from Excel input to the dashboard. Each stage lists the
+techniques, models, or outputs involved.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -122,81 +204,59 @@ techniques, models or outputs used at that stage.
 │  8. FRONTEND                                         React + Vite :5173     │
 │  • Vite proxies /api → :8000                                                │
 │  • DashboardDataContext: parallel fetch of all endpoints on load / upload   │
-│  • AppLayout: ink sidebar, meta bar (source · jobs · date range · currency) │
+│  • AppLayout: sidebar, dataset meta bar                                     │
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  9. UI OUTPUT                                                               │
-│  Brief anatomy (every insight page):                                        │
-│    metrics → key finding → breakdown table → numbered actions               │
-│  Then Supporting Charts (Recharts): bars, donuts, seasonal lines, tables    │
+│  Brief: metrics → key finding → breakdown → actions                         │
+│  Then supporting charts (Recharts) and detail tables                        │
 │  Overview: executive findings + currency split                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Upload loop:** replace `jobs` → bump DataStore version → invalidate ML cache → retrain → frontend `reload()`.
+| Loop | Behaviour |
+| --- | --- |
+| **Upload** | Replace `jobs` → bump DataStore version → invalidate ML cache → retrain → frontend reload |
+| **Restart** | If `jobs` is non-empty, skip Excel → read SQLite → derive → continue from DataStore |
 
-**Restart loop:** if `jobs` is non-empty, skip Excel → read SQLite → derive → stages 4–9.
+---
 
-## How the app works
-
-Data enters as an Excel export (or dashboard upload), is cleaned and stored in
-SQLite, then enriched in memory. Seven analytics modules and two ML models run
-over that dataset. Deterministic narrative templates turn verified figures into
-a `brief` object. FastAPI serves those payloads; the React app loads them once
-and renders brief-first pages with supporting charts underneath.
-
-## Application structure
+## Repository structure
 
 ```
 wg-baird-sales-intelligence/
 ├── README.md
 ├── data/
-│   ├── raw/                        # sample_data.xlsx (seed; not in git)
-│   ├── uploads/                    # upload scratch (not in git)
-│   └── app.db                      # SQLite store of record (not in git)
+│   ├── raw/                 # sample_data.xlsx (seed; not committed)
+│   ├── uploads/             # upload scratch (not committed)
+│   └── app.db               # SQLite store of record (not committed)
 ├── backend/
 │   ├── requirements.txt
 │   └── app/
-│       ├── main.py                 # FastAPI routes
-│       ├── config.py               # FX rate and thresholds
-│       ├── data_loader.py          # Excel → clean → derive → DataStore
-│       ├── db.py                   # SQLite schema and helpers
-│       ├── analytics/
-│       │   ├── customer_value.py
-│       │   ├── reorder.py
-│       │   ├── churn.py
-│       │   ├── pricing.py
-│       │   ├── seasonality.py
-│       │   ├── delivery.py
-│       │   ├── repeat_business.py
-│       │   └── narrative.py        # brief templates + executive summary
-│       └── ml/
-│           ├── price_model.py      # Quote Guard
-│           └── churn_model.py      # Retention risk
+│       ├── main.py          # FastAPI routes
+│       ├── config.py        # FX rate and thresholds
+│       ├── data_loader.py   # Excel → clean → derive → DataStore
+│       ├── db.py            # SQLite schema and helpers
+│       ├── analytics/       # Seven insight modules + narrative briefs
+│       └── ml/              # Quote Guard + churn risk
 └── frontend/
     ├── package.json
-    ├── vite.config.ts              # proxies /api → :8000
-    ├── tailwind.config.js
+    ├── vite.config.ts       # proxies /api → :8000
     └── src/
-        ├── App.tsx                 # provider + routes
-        ├── api/                    # typed client + response types
-        ├── data/DashboardDataContext.tsx
-        ├── layout/AppLayout.tsx    # sidebar, meta bar, outlet
-        ├── components/
-        │   ├── brief/Brief.tsx     # shared page anatomy
-        │   ├── charts/             # Recharts wrappers
-        │   ├── Panel.tsx
-        │   └── UploadControl.tsx
-        ├── pages/                  # one page per insight
-        ├── theme/colors.ts
-        └── format.ts
+        ├── App.tsx
+        ├── api/             # Typed client and response types
+        ├── data/            # DashboardDataContext
+        ├── layout/          # App shell and navigation
+        ├── components/      # Brief, charts, upload control
+        ├── pages/           # One page per insight
+        └── theme/           # Design tokens
 ```
 
-### Page → API mapping
+### Route map
 
-| Route | Page | Backend |
+| Route | Page | Endpoint(s) |
 | --- | --- | --- |
 | `/` | Executive Briefing | `GET /api/summary`, `GET /api/executive-summary` |
 | `/customer-value` | Customer Value | `GET /api/insights/customer-value` |
@@ -209,135 +269,91 @@ wg-baird-sales-intelligence/
 | `/quote-guard` | Quote Intelligence | `GET /api/ml/quote-guard` |
 | `/churn-risk` | Retention Risk | `GET /api/ml/churn-risk` |
 
-## Pages
+---
 
-| Page | Question it answers |
+## Data and persistence
+
+| Asset | Role |
 | --- | --- |
-| **Executive Briefing** | What the data is telling you, five findings deep |
-| **Customer Value** | Where your value actually comes from |
-| **Recurring Revenue** | Work you have already won |
-| **Reorder Forecasting** | Who is due to order next |
-| **Account Retention** | Customers who have gone quiet |
-| **Pricing Integrity** | Margin decided at the point of quoting |
-| **Demand & Capacity** | The shape of your trading year |
-| **Production Turnaround** | How long work takes to leave the building |
-| **Quote Intelligence** | What comparable work actually sells for |
-| **Retention Risk** | Who is unlikely to come back |
+| `data/raw/sample_data.xlsx` | Seeds the database on first run |
+| `data/app.db` → `jobs` | Active dataset (indexed on customer, booking date, title) |
+| `data/app.db` → `dataset_uploads` | Append-only log of every file loaded |
 
-## How each page is structured
+Restarting the API reads from SQLite; the original Excel file need not remain
+on disk. Uploading a new workbook in the same format (dashboard or
+`POST /api/data/upload`) replaces the dataset, re-derives every insight, and
+retrains both models. Raw data and the database are excluded from git.
 
-Every insight page follows the same shape, so a reader learns the format once:
+### Data-quality notes
 
-1. **Three headline figures**, each with a unit so it reads on its own.
-2. **One hero number** with a three-sentence read, enough to take the point
-   without going further.
-3. **A breakdown table** where every row carries a plain-English description of
-   what that row means.
-4. **Numbered actions**, each tagged with what it costs (free / low cost /
-   value at stake) and explained concretely.
-5. **Supporting charts** underneath: evidence for the argument, not the argument
-   itself.
+- **Two currencies.** Sell prices are stored in the customer’s home currency in
+  a single column. Summing them raw overstates the book by roughly £2.0M. All
+  money figures are converted to GBP at a planning rate (`BAIRD_EUR_GBP`,
+  default `0.86`) before aggregation. The currency split appears on the
+  overview page.
+- **Product naming drift.** The source has 64 product-type labels, some of
+  which are spelling variants of the same category. Variants are merged on an
+  alphanumeric key; genuinely distinct labels are left alone.
 
-The interface is a single light theme, tuned for on-screen reading and for
-projection in a boardroom.
+---
 
-## Two findings worth knowing before reading the numbers
+## Modelling
 
-- **The book is billed in two currencies.** Sell prices are recorded in the
-  customer's own currency in a single column. Summed untouched they overstate
-  the book by roughly £2.0M. Everything is converted to GBP at a stated planning
-  rate (`BAIRD_EUR_GBP`, default 0.86) before aggregation, and the split is shown
-  on the overview page.
-- **Product naming has drifted.** The source carries 64 distinct product types,
-  some of which are the same category typed differently. Spelling variants are
-  merged on an alphanumeric key; genuinely different labels are left alone.
+Both models report held-out performance in the UI beside their predictions.
 
-## Modelling notes
+| Model | Approach | Notes |
+| --- | --- | --- |
+| **Quote Guard** | `HistGradientBoostingRegressor` on `log(sell_price_base)` | Uses specification and input costs only. Value added, markup, and manual adjustment are excluded (they are outcomes of pricing, not inputs). Median absolute percentage error ≈ 6.7% on unseen jobs. |
+| **Churn risk** | `HistGradientBoostingClassifier` on a customer-month panel | Features use history before each observation date only; train/test split is by time. Scored against a naive overdue-gap AUC. With ~50 customers it is a ranking aid, not a verdict. |
 
-Both models report honest held-out performance, shown in the UI beside the
-predictions:
+### Narrative generation
 
-- **Quote Guard** predicts price from specification and input costs only. Value
-  added, markup and the manual adjustment are excluded, because they are
-  consequences of the pricing decision rather than inputs to it. Median error is
-  about 6.7% on unseen jobs.
-- **Churn risk** is trained on a customer-month panel (features computed only
-  from history before each observation date) and split by time rather than at
-  random. It is scored against a naive "how overdue are they" benchmark; with
-  only 50 customers it is presented as a ranking aid, not a verdict.
+Briefings are built from deterministic templates (`analytics/narrative.py`), not
+a language model. That keeps three properties: numbers reconcile exactly with
+tables beside them, wording is identical on every load of the same data, and
+there is no external service or per-query cost.
 
-The written briefing on each page is generated deterministically from the
-computed figures rather than by a language model. The numbers quoted have to
-reconcile exactly with the table beside them, the wording has to be identical on
-every load of the same data, and it has to work with no external service and no
-per-query cost. A template interpolating verified figures meets all three.
+---
 
-## Run it
-
-Backend:
-
-```bash
-cd backend && python -m venv .venv && ./.venv/Scripts/pip install -r requirements.txt
-```
-```bash
-cd backend && ./.venv/Scripts/python -m uvicorn app.main:app --reload --port 8000
-```
-
-Frontend:
-
-```bash
-cd frontend && npm install && npm run dev
-```
-
-Open the URL Vite prints (default `http://localhost:5173`); it proxies `/api/*`
-to port 8000. On macOS/Linux use `.venv/bin/` in place of `.venv/Scripts/`.
-
-## Data & persistence
-
-`data/raw/sample_data.xlsx` seeds the database on first run. `data/app.db`
-(SQLite) is the store of record and holds:
-
-- `jobs`, the active dataset, indexed on customer, booking date and title
-- `dataset_uploads`, an append-only log of every file loaded, with row count
-  and timestamp
-
-Restarting the API reads from the database, so the original Excel file does not
-need to remain on disk. Uploading a new file in the same format (via the
-dashboard or `POST /api/data/upload`) replaces the dataset, re-derives every
-insight and retrains both models. Neither the raw data nor the database is
-committed to git.
-
-## API
+## API reference
 
 | Endpoint | Returns |
 | --- | --- |
-| `GET /api/summary` | Headline figures and the currency split |
+| `GET /api/summary` | Headline figures and currency split |
 | `GET /api/meta` | Reporting assumptions and thresholds |
-| `GET /api/executive-summary` | The findings most warranting senior attention |
+| `GET /api/executive-summary` | Findings most warranting senior attention |
 | `GET /api/insights/customer-value` | Value by customer, work type, product, sector |
 | `GET /api/insights/repeat-business` | Recurring titles and reprint pipeline |
 | `GET /api/insights/reorder` | Reorder cadence and projections |
 | `GET /api/insights/churn` | Rules-based dormancy and follow-up list |
-| `GET /api/insights/pricing` | Override rates, discounting, below-cost work |
+| `GET /api/insights/pricing` | Overrides, discounting, below-cost work |
 | `GET /api/insights/seasonality` | Monthly trend, seasonal index, forecast |
 | `GET /api/insights/delivery` | Turnaround performance |
 | `GET /api/ml/quote-guard` | Price benchmark, metrics, flagged jobs |
 | `GET /api/ml/churn-risk` | Risk scores, metrics, benchmark comparison |
-| `POST /api/data/upload` | Replace the active dataset (multipart `file`) |
+| `POST /api/data/upload` | Replace active dataset (`multipart/form-data`) |
 | `GET /api/data/history` | Log of datasets loaded |
 
-Every insight endpoint includes a `brief` object alongside the raw figures. It
-carries `title`, `metrics`, `hero`, `breakdown` and `actions`, and is what the
-dashboard renders. The numbers inside it are formatted server-side, so the prose
-and the tables can never disagree.
+Every insight and ML endpoint includes a `brief` object (`title`, `metrics`,
+`hero`, `breakdown`, `actions`) alongside raw figures. Brief numbers are
+formatted server-side so prose and tables cannot disagree.
 
-## Assumptions worth challenging
+---
 
-All in `backend/app/config.py`: the EUR→GBP rate, the churn multiples that
-define "at risk" and "dormant", the 25% low-margin threshold, the 20% underpriced
-threshold, the 180-day cap on plausible lead times, and the 30-day minimum for a
-gap to count as a genuine reprint cycle.
+## Configuration
 
-Recency analytics anchor to the latest booking date in the data rather than
-wall-clock today, so a months-old extract does not make every customer look
-dormant.
+Assumptions live in `backend/app/config.py` and can be challenged or overridden
+without changing analytics code:
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `BAIRD_EUR_GBP` | `0.86` | Planning EUR→GBP rate |
+| At-risk / dormant multiples | `1.25×` / `2.5×` own order gap | Rules-based retention |
+| Fallback absolute days | `120` / `270` | Customers with too little history |
+| Low-margin VA threshold | `25%` | Pricing integrity |
+| Underpriced threshold | `20%` | Quote Guard flags |
+| Max plausible lead time | `180` days | Delivery averages |
+| Min reprint cycle | `30` days | Exclude split orders from “due” list |
+
+Recency analytics anchor to the latest booking date in the data, not wall-clock
+today, so a months-old extract does not make every customer look dormant.
