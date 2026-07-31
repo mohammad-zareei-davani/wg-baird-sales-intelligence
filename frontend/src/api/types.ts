@@ -1,7 +1,29 @@
-export interface Story {
-  headline: string;
-  what_it_means: string;
-  recommended_action: string;
+export interface BriefMetric {
+  label: string;
+  value: string;
+  sublabel: string;
+}
+
+export interface BriefRow {
+  category: string;
+  description: string;
+  value: string;
+  share: string;
+}
+
+export interface BriefAction {
+  title: string;
+  badge: string;
+  tone: "free" | "low" | "value" | "watch";
+  body: string;
+}
+
+export interface Brief {
+  title: string;
+  metrics: BriefMetric[];
+  hero: { value: string; caption: string; body: string };
+  breakdown: { title: string; columns: string[]; rows: BriefRow[] };
+  actions: { title: string; items: BriefAction[]; footnote?: string };
 }
 
 export interface CurrencySplit {
@@ -24,7 +46,7 @@ export interface Summary {
   base_currency_symbol: string;
   eur_to_gbp: number;
   source: string;
-  story: Story;
+  brief: Brief;
 }
 
 /* ---------- Customer value ---------- */
@@ -82,7 +104,7 @@ export interface CustomerValueResponse {
     top_customer_share_pct: number;
     top_5_share_pct: number;
   };
-  story: Story;
+  brief: Brief;
 }
 
 /* ---------- Reorder ---------- */
@@ -111,7 +133,7 @@ export interface ReorderResponse {
     due_soon_count: number;
     expected_value_next_30_days: number;
   };
-  story: Story;
+  brief: Brief;
 }
 
 /* ---------- Churn (rules) ---------- */
@@ -139,7 +161,7 @@ export interface ChurnResponse {
   follow_up_opportunities: ChurnCustomer[];
   status_counts: Record<ChurnStatus, number>;
   dormant_lifetime_value_at_stake: number;
-  story: Story;
+  brief: Brief;
 }
 
 /* ---------- Pricing ---------- */
@@ -194,7 +216,7 @@ export interface PricingResponse {
   discount_by_rep: DiscountBucket[];
   discount_by_work_type: DiscountBucket[];
   below_cost_by_customer: BelowCostCustomer[];
-  story: Story;
+  brief: Brief;
 }
 
 /* ---------- Seasonality ---------- */
@@ -241,7 +263,7 @@ export interface SeasonalityResponse {
     forecast_next_month_sales: number | null;
     forecast_next_month_press: number | null;
   };
-  story: Story;
+  brief: Brief;
 }
 
 /* ---------- Delivery ---------- */
@@ -288,7 +310,7 @@ export interface DeliveryResponse {
     days_over_product_norm: number;
     sell_price: number;
   }[];
-  story: Story;
+  brief: Brief;
 }
 
 /* ---------- Repeat business ---------- */
@@ -326,7 +348,7 @@ export interface RepeatBusinessResponse {
   due_for_reprint: RepeatTitle[];
   top_repeat_titles: RepeatTitle[];
   by_product: { product_type: string; titles: number; total_sell: number; runs: number }[];
-  story: Story;
+  brief: Brief;
 }
 
 /* ---------- ML: Quote Guard ---------- */
@@ -359,7 +381,7 @@ export interface QuoteGuardResponse {
     gap_pct: number;
   }[];
   features_used?: string[];
-  story: Story;
+  brief: Brief;
 }
 
 /* ---------- ML: Churn risk ---------- */
@@ -394,12 +416,20 @@ export interface ChurnRiskResponse {
   current_risk?: ChurnRiskCustomer[];
   band_counts?: Record<string, number>;
   features_used?: string[];
-  story: Story;
+  brief: Brief;
 }
 
 /* ---------- Executive summary ---------- */
 
+export interface ExecutiveFinding {
+  area: string;
+  title: string;
+  value: string;
+  caption: string;
+  body: string;
+}
+
 export interface ExecutiveSummaryResponse {
-  findings: { area: string; headline: string }[];
-  stories: Record<string, Story>;
+  findings: ExecutiveFinding[];
+  briefs: Record<string, Brief>;
 }

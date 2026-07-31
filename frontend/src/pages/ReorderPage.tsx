@@ -1,11 +1,8 @@
 import { useMemo, useState } from "react";
 import { useLoadedDashboardData } from "../data/DashboardDataContext";
 import { Panel } from "../components/Panel";
-import { PageHeader } from "../components/PageHeader";
-import { StoryPanel } from "../components/StoryPanel";
+import { Brief, PageTitle, SupportingCharts } from "../components/brief/Brief";
 import { ReorderTable } from "../components/ReorderTable";
-import { StatCallout, StatCalloutRow } from "../components/StatCallout";
-import { formatCurrencyCompact, formatNumber } from "../format";
 import type { ReorderStatus } from "../api/types";
 
 const FILTERS: Array<{ key: ReorderStatus | "All"; label: string }> = [
@@ -27,39 +24,30 @@ export function ReorderPage() {
 
   return (
     <div className="mx-auto flex max-w-[1080px] flex-col gap-5">
-      <PageHeader
-        title="Reorder values & predicted timelines"
-        description="Every distinct booking date counts as one order event. From each customer's sequence of orders we derive their normal reorder rhythm and project the next order date and value — a transparent baseline anyone can reconstruct by hand."
-      />
+      <PageTitle eyebrow="Reorder Forecasting" title={reorder.brief.title} />
+      <Brief brief={reorder.brief} />
 
-      <StoryPanel story={reorder.story} />
-
-      <StatCalloutRow>
-        <StatCallout value={formatNumber(reorder.summary.predictable_customers)} label="Customers with a forecast" />
-        <StatCallout value={formatNumber(reorder.summary.overdue_count)} label="Overdue" accent="critical" />
-        <StatCallout value={formatNumber(reorder.summary.due_soon_count)} label="Due within 14 days" accent="warning" />
-        <StatCallout value={formatCurrencyCompact(reorder.summary.expected_value_next_30_days)} label="Expected value, next 30 days" />
-      </StatCalloutRow>
-
-      <Panel title="Forecast by customer">
-        <div className="mb-3.5 flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              type="button"
-              onClick={() => setFilter(f.key)}
-              className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold ${
-                filter === f.key
-                  ? "border-series-1 bg-series-1 text-white"
-                  : "border-black/10 bg-raised text-ink-secondary hover:border-series-1 hover:text-series-1"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-        <ReorderTable rows={rows} />
-      </Panel>
+      <SupportingCharts>
+        <Panel title="Forecast by customer" subtitle="Each account's normal rhythm and where they sit against it">
+          <div className="mb-3.5 flex flex-wrap gap-2">
+            {FILTERS.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setFilter(f.key)}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold ${
+                  filter === f.key
+                    ? "border-series-1 bg-series-1 text-white"
+                    : "border-edge/10 bg-raised text-ink-secondary hover:border-series-1 hover:text-series-1"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <ReorderTable rows={rows} />
+        </Panel>
+      </SupportingCharts>
     </div>
   );
 }

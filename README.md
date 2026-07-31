@@ -7,34 +7,37 @@ SQLite as the store of record.
 Every insight page leads with the commercial reading — what the number is, what
 it means, and what to do about it — before showing any chart.
 
-## Insights
+## Pages
 
-**Commercial**
+| Page | Question it answers |
+| --- | --- |
+| **Executive Briefing** | What the data is telling you, five findings deep |
+| **Customer Value** | Where your value actually comes from |
+| **Recurring Revenue** | Work you have already won |
+| **Reorder Forecasting** | Who is due to order next |
+| **Account Retention** | Customers who have gone quiet |
+| **Pricing Integrity** | Margin decided at the point of quoting |
+| **Demand & Capacity** | The shape of your trading year |
+| **Production Turnaround** | How long work takes to leave the building |
+| **Quote Intelligence** | What comparable work actually sells for |
+| **Retention Risk** | Who is unlikely to come back |
 
-1. **Customer value** — accounts ranked by Value Added rather than sell price,
-   with work-type, product and sector breakdowns and a concentration measure.
-2. **Repeat & reprint work** — recurring titles, their reprint cycles, and which
-   are now overdue against their own cycle.
-3. **Reorder timelines** — each account's normal ordering rhythm, with projected
-   next order date and value.
-4. **Churn & follow-up** — dormancy scored against each customer's own cadence,
-   prioritised by lifetime value at stake.
+## How each page is structured
 
-**Operations**
+Every page follows the same shape, so a reader learns the format once:
 
-5. **Pricing & margin integrity** — how often the automated estimate is
-   overridden, where discounting concentrates, and which work ran below cost.
-6. **Seasonality & capacity** — monthly demand and press-hour load, the seasonal
-   shape of the year, and a six-month projection with backtested error.
-7. **Delivery performance** — turnaround from booking to despatch, judged per
-   product against that product's own norm.
+1. **Three headline figures**, each with a unit so it reads on its own.
+2. **One hero number** with a three-sentence read — enough to take the point
+   without going further.
+3. **A breakdown table** where every row carries a plain-English description of
+   what that row means.
+4. **Numbered actions**, each tagged with what it costs (free / low cost /
+   value at stake) and explained concretely.
+5. **Supporting charts** underneath — evidence for the argument, not the
+   argument itself.
 
-**Predictive**
-
-8. **Quote Guard** — a model that learns what comparable work sells for and
-   flags jobs priced materially below it.
-9. **Churn risk** — likelihood each account orders again within 60 days,
-   validated against a naive benchmark on a time-based split.
+The interface supports light and dark mode, following the system setting until
+the user chooses explicitly.
 
 ## Two findings worth knowing before reading the numbers
 
@@ -60,9 +63,11 @@ predictions:
   random. It is scored against a naive "how overdue are they" benchmark; with
   only 50 customers it is presented as a ranking aid, not a verdict.
 
-Narrative text is generated deterministically from the computed figures rather
-than by a language model, so the wording in a board pack always reconciles with
-the table beside it and costs nothing to produce.
+The written briefing on each page is generated deterministically from the
+computed figures rather than by a language model. The numbers quoted have to
+reconcile exactly with the table beside them, the wording has to be identical on
+every load of the same data, and it has to work with no external service and no
+per-query cost — a template interpolating verified figures meets all three.
 
 ## Run it
 
@@ -118,8 +123,10 @@ committed to git.
 | `POST /api/data/upload` | Replace the active dataset (multipart `file`) |
 | `GET /api/data/history` | Log of datasets loaded |
 
-Every insight endpoint includes a `story` object (`headline`,
-`what_it_means`, `recommended_action`) alongside the figures.
+Every insight endpoint includes a `brief` object alongside the raw figures —
+`title`, `metrics`, `hero`, `breakdown` and `actions` — which is what the
+dashboard renders. The numbers in the brief are formatted server-side so the
+prose and the tables can never disagree.
 
 ## Assumptions worth challenging
 

@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { ThemeProvider } from "./theme/ThemeContext";
 import { DashboardDataProvider } from "./data/DashboardDataContext";
 import { AppLayout } from "./layout/AppLayout";
 import { OverviewPage } from "./pages/OverviewPage";
@@ -14,23 +15,25 @@ import { ChurnRiskPage } from "./pages/ChurnRiskPage";
 
 export default function App() {
   return (
-    <DashboardDataProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route index element={<OverviewPage />} />
-            <Route path="customer-value" element={<CustomerValuePage />} />
-            <Route path="repeat-business" element={<RepeatBusinessPage />} />
-            <Route path="reorder" element={<ReorderPage />} />
-            <Route path="churn" element={<ChurnPage />} />
-            <Route path="pricing" element={<PricingPage />} />
-            <Route path="seasonality" element={<SeasonalityPage />} />
-            <Route path="delivery" element={<DeliveryPage />} />
-            <Route path="quote-guard" element={<QuoteGuardPage />} />
-            <Route path="churn-risk" element={<ChurnRiskPage />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </DashboardDataProvider>
+    <ThemeProvider>
+      <DashboardDataProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route index element={<OverviewPage />} />
+              <Route path="customer-value" element={<CustomerValuePage />} />
+              <Route path="repeat-business" element={<RepeatBusinessPage />} />
+              <Route path="reorder" element={<ReorderPage />} />
+              <Route path="churn" element={<ChurnPage />} />
+              <Route path="pricing" element={<PricingPage />} />
+              <Route path="seasonality" element={<SeasonalityPage />} />
+              <Route path="delivery" element={<DeliveryPage />} />
+              <Route path="quote-guard" element={<QuoteGuardPage />} />
+              <Route path="churn-risk" element={<ChurnRiskPage />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </DashboardDataProvider>
+    </ThemeProvider>
   );
 }

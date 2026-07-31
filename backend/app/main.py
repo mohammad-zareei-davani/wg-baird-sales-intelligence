@@ -118,56 +118,56 @@ def summary() -> dict:
         "eur_to_gbp": config.EUR_TO_GBP,
         "source": store.source_name,
     }
-    payload["story"] = narrative.data_quality_story(payload)
+    payload["brief"] = narrative.data_quality_brief(payload)
     return payload
 
 
 @app.get("/api/insights/customer-value")
 def insight_customer_value(top_n: int = 15) -> dict:
     result = customer_value_summary(_df(), top_n=top_n)
-    result["story"] = narrative.customer_value_story(result)
+    result["brief"] = narrative.customer_value_brief(result)
     return result
 
 
 @app.get("/api/insights/reorder")
 def insight_reorder() -> dict:
     result = reorder_predictions(_df(), as_of=_as_of())
-    result["story"] = narrative.reorder_story(result)
+    result["brief"] = narrative.reorder_brief(result)
     return result
 
 
 @app.get("/api/insights/churn")
 def insight_churn() -> dict:
     result = churn_analysis(_df(), as_of=_as_of())
-    result["story"] = narrative.churn_story(result)
+    result["brief"] = narrative.churn_brief(result)
     return result
 
 
 @app.get("/api/insights/pricing")
 def insight_pricing() -> dict:
     result = pricing_analysis(_df())
-    result["story"] = narrative.pricing_story(result)
+    result["brief"] = narrative.pricing_brief(result)
     return result
 
 
 @app.get("/api/insights/seasonality")
 def insight_seasonality(horizon: int = 6) -> dict:
     result = seasonality_analysis(_df(), horizon=horizon)
-    result["story"] = narrative.seasonality_story(result)
+    result["brief"] = narrative.seasonality_brief(result)
     return result
 
 
 @app.get("/api/insights/delivery")
 def insight_delivery() -> dict:
     result = delivery_analysis(_df())
-    result["story"] = narrative.delivery_story(result)
+    result["brief"] = narrative.delivery_brief(result)
     return result
 
 
 @app.get("/api/insights/repeat-business")
 def insight_repeat_business() -> dict:
     result = repeat_business_analysis(_df(), as_of=_as_of())
-    result["story"] = narrative.repeat_business_story(result)
+    result["brief"] = narrative.repeat_business_brief(result)
     return result
 
 
@@ -175,7 +175,7 @@ def insight_repeat_business() -> dict:
 def ml_quote_guard() -> dict:
     _df()
     result = dict(_price_model(store.version))
-    result["story"] = narrative.quote_guard_story(result)
+    result["brief"] = narrative.quote_guard_brief(result)
     return result
 
 
@@ -183,7 +183,7 @@ def ml_quote_guard() -> dict:
 def ml_churn_risk() -> dict:
     _df()
     result = dict(_churn_model(store.version))
-    result["story"] = narrative.churn_model_story(result)
+    result["brief"] = narrative.churn_model_brief(result)
     return result
 
 
@@ -191,14 +191,14 @@ def ml_churn_risk() -> dict:
 def exec_summary() -> dict:
     df = _df()
     as_of = _as_of()
-    stories = {
-        "pricing": narrative.pricing_story(pricing_analysis(df)),
-        "customer_value": narrative.customer_value_story(customer_value_summary(df)),
-        "repeat_business": narrative.repeat_business_story(repeat_business_analysis(df, as_of)),
-        "churn": narrative.churn_story(churn_analysis(df, as_of)),
-        "seasonality": narrative.seasonality_story(seasonality_analysis(df)),
+    briefs = {
+        "pricing": narrative.pricing_brief(pricing_analysis(df)),
+        "customer_value": narrative.customer_value_brief(customer_value_summary(df)),
+        "repeat_business": narrative.repeat_business_brief(repeat_business_analysis(df, as_of)),
+        "churn": narrative.churn_brief(churn_analysis(df, as_of)),
+        "seasonality": narrative.seasonality_brief(seasonality_analysis(df)),
     }
-    return {"findings": narrative.executive_summary(stories), "stories": stories}
+    return {"findings": narrative.executive_summary(briefs), "briefs": briefs}
 
 
 @app.post("/api/data/upload")

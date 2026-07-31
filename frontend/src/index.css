@@ -2,6 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Light and dark are both deliberately chosen palettes rather than one being
+ * an automatic inversion of the other. The eight series hues are the same
+ * family in both modes, re-stepped for the surface they sit on so they stay
+ * distinguishable — including for colour-blind readers — against either
+ * background.
+ */
+:root {
+  --c-page: 244 244 241;
+  --c-surface: 252 252 251;
+  --c-raised: 255 255 255;
+  --c-accent-soft: 234 241 251;
+
+  --c-ink-primary: 11 11 11;
+  --c-ink-secondary: 82 81 78;
+  --c-ink-muted: 137 135 129;
+
+  --c-line-grid: 225 224 217;
+  --c-line-axis: 195 194 183;
+  --c-edge: 11 11 11;
+
+  --c-series-1: 42 120 214;
+  --c-series-2: 235 104 52;
+  --c-series-3: 27 175 122;
+  --c-series-4: 237 161 0;
+  --c-series-5: 232 123 164;
+  --c-series-6: 0 131 0;
+  --c-series-7: 74 58 167;
+  --c-series-8: 227 73 72;
+
+  --c-status-good: 12 163 12;
+  --c-status-good-bg: 230 246 230;
+  --c-status-good-text: 0 99 0;
+  --c-status-warning: 250 178 25;
+  --c-status-warning-bg: 254 243 220;
+  --c-status-warning-text: 138 90 0;
+  --c-status-serious: 236 131 90;
+  --c-status-serious-bg: 252 230 221;
+  --c-status-serious-text: 170 74 40;
+  --c-status-critical: 208 59 59;
+  --c-status-critical-bg: 251 226 226;
+  --c-status-critical-text: 176 38 38;
+
+  color-scheme: light;
+}
+
+.dark {
+  --c-page: 13 13 13;
+  --c-surface: 26 26 25;
+  --c-raised: 35 35 34;
+  --c-accent-soft: 38 51 65;
+
+  --c-ink-primary: 255 255 255;
+  --c-ink-secondary: 195 194 183;
+  --c-ink-muted: 137 135 129;
+
+  --c-line-grid: 44 44 42;
+  --c-line-axis: 56 56 53;
+  --c-edge: 255 255 255;
+
+  --c-series-1: 57 135 229;
+  --c-series-2: 217 89 38;
+  --c-series-3: 25 158 112;
+  --c-series-4: 201 133 0;
+  --c-series-5: 213 81 129;
+  --c-series-6: 0 131 0;
+  --c-series-7: 144 133 233;
+  --c-series-8: 230 103 103;
+
+  --c-status-good: 12 163 12;
+  --c-status-good-bg: 24 48 23;
+  --c-status-good-text: 12 163 12;
+  --c-status-warning: 250 178 25;
+  --c-status-warning-bg: 62 50 25;
+  --c-status-warning-text: 250 178 25;
+  --c-status-serious: 236 131 90;
+  --c-status-serious-bg: 60 43 35;
+  --c-status-serious-text: 236 131 90;
+  --c-status-critical: 208 59 59;
+  --c-status-critical-bg: 55 31 30;
+  --c-status-critical-text: 230 103 103;
+
+  color-scheme: dark;
+}
+
 body {
   @apply bg-page text-ink-primary font-sans antialiased;
 }

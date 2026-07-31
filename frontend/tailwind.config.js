@@ -1,41 +1,53 @@
 /** @type {import('tailwindcss').Config} */
+
+// Colours resolve through CSS custom properties so a single `dark` class on
+// <html> reskins the whole app — every existing utility class keeps working
+// in both modes without needing a `dark:` variant on each element.
+const withAlpha = (variable) => `rgb(var(${variable}) / <alpha-value>)`;
+
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   darkMode: "class",
   theme: {
     extend: {
       colors: {
-        page: "#f4f4f1",
-        surface: "#fcfcfb",
-        raised: "#ffffff",
+        page: withAlpha("--c-page"),
+        surface: withAlpha("--c-surface"),
+        raised: withAlpha("--c-raised"),
+        accentSoft: withAlpha("--c-accent-soft"),
         ink: {
-          primary: "#0b0b0b",
-          secondary: "#52514e",
-          muted: "#898781",
+          primary: withAlpha("--c-ink-primary"),
+          secondary: withAlpha("--c-ink-secondary"),
+          muted: withAlpha("--c-ink-muted"),
         },
         line: {
-          grid: "#e1e0d9",
-          axis: "#c3c2b7",
+          grid: withAlpha("--c-line-grid"),
+          axis: withAlpha("--c-line-axis"),
         },
+        edge: withAlpha("--c-edge"),
         series: {
-          1: "#2a78d6",
-          2: "#eb6834",
-          3: "#1baf7a",
-          4: "#eda100",
-          5: "#e87ba4",
-          6: "#008300",
-          7: "#4a3aa7",
-          8: "#e34948",
+          1: withAlpha("--c-series-1"),
+          2: withAlpha("--c-series-2"),
+          3: withAlpha("--c-series-3"),
+          4: withAlpha("--c-series-4"),
+          5: withAlpha("--c-series-5"),
+          6: withAlpha("--c-series-6"),
+          7: withAlpha("--c-series-7"),
+          8: withAlpha("--c-series-8"),
         },
         status: {
-          good: "#0ca30c",
-          goodBg: "#e6f6e6",
-          warning: "#fab219",
-          warningBg: "#fef3dc",
-          serious: "#ec835a",
-          seriousBg: "#fce6dd",
-          critical: "#d03b3b",
-          criticalBg: "#fbe2e2",
+          good: withAlpha("--c-status-good"),
+          goodBg: withAlpha("--c-status-good-bg"),
+          goodText: withAlpha("--c-status-good-text"),
+          warning: withAlpha("--c-status-warning"),
+          warningBg: withAlpha("--c-status-warning-bg"),
+          warningText: withAlpha("--c-status-warning-text"),
+          serious: withAlpha("--c-status-serious"),
+          seriousBg: withAlpha("--c-status-serious-bg"),
+          seriousText: withAlpha("--c-status-serious-text"),
+          critical: withAlpha("--c-status-critical"),
+          criticalBg: withAlpha("--c-status-critical-bg"),
+          criticalText: withAlpha("--c-status-critical-text"),
         },
       },
       fontFamily: {
