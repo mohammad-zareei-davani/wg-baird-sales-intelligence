@@ -9,6 +9,7 @@ argument.
 | --- | --- |
 | Backend | FastAPI, pandas, scikit-learn, SQLite |
 | Frontend | React, TypeScript, Tailwind CSS, Recharts |
+| Deploy | Docker Compose (nginx + uvicorn) |
 | Data | Excel interchange → SQLite store of record |
 
 ---
@@ -34,8 +35,8 @@ Every insight page follows the same structure so readers learn the format once:
 1. Three headline metrics  
 2. One key finding (hero figure + short commercial read)  
 3. Breakdown table with plain-English row descriptions  
-4. Numbered actions tagged by cost (free / low cost / value at stake)  
-5. Supporting charts and detail tables underneath  
+4. Supporting charts and detail tables  
+5. Numbered actions tagged by cost (free / low cost / value at stake)  
 
 The UI uses a single light theme, designed for screen reading and boardroom
 projection.
@@ -44,12 +45,40 @@ projection.
 
 ## Getting started
 
+### Docker (recommended)
+
+**Prerequisites:** Docker Desktop (or Docker Engine + Compose).
+
+```bash
+cp .env.example .env   # optional: add OPENAI_API_KEY for generated commentary
+docker compose up --build
+```
+
+Open **http://localhost:8080**. nginx serves the UI and proxies `/api` to the
+backend. `./data` is mounted into the container so the sample report and any
+uploads persist on the host.
+
+```bash
+docker compose down          # stop
+docker compose down -v       # stop (volumes are host-mounted; data stays in ./data)
+```
+
+| Service | Image role | Host port |
+| --- | --- | --- |
+| `frontend` | Vite build → nginx | `8080` → container `80` |
+| `backend` | uvicorn (FastAPI) | internal only (`backend:8000`) |
+
+### Local development
+
 Run the API and the UI in **two terminals**. The frontend proxies `/api/*` to
 port `8000`.
 
 **Prerequisites:** Python 3.11+, Node.js 18+.
 
-### Backend
+Copy `.env.example` to `.env` at the **repository root** if you want optional
+LLM commentary (the app works without a key).
+
+#### Backend
 
 ```bash
 cd backend
@@ -72,16 +101,7 @@ macOS / Linux:
 
 API: `http://localhost:8000`
 
-**A worked example ships with the repository.** `data/app.db` already contains
-the W&G Baird sample dataset and its finished report, so the dashboard opens on
-a populated Executive Briefing with no upload, no model training and no API key
-required. Nothing is generated on startup.
-
-To see the full pipeline instead, upload `data/sample/WG-Baird-Sample-Dataset.xlsx`
-(or any workbook in the same format) from the sidebar and watch the report
-build. Delete any report from the sidebar to remove it and its dataset.
-
-### Frontend
+#### Frontend
 
 ```bash
 cd frontend
@@ -92,19 +112,29 @@ npm run dev
 Open the URL Vite prints (default `http://localhost:5173`). Keep the backend
 running while using the dashboard.
 
+### Sample data
+
+**A worked example ships with the repository.** `data/app.db` already contains
+the W&G Baird sample dataset and its finished report, so the dashboard opens on
+a populated Executive Briefing with no upload, no model training and no API key
+required. Nothing is generated on startup.
+
+To see the full pipeline instead, upload `data/sample/WG-Baird-Sample-Dataset.xlsx`
+(or any workbook in the same format) from the sidebar and watch the report
+build. Delete any report from the sidebar to remove it and its dataset.
+
 ---
 
 ## Architecture
 
-End-to-end flow from Excel input to the dashboard. Each stage lists the
-techniques, models, or outputs involved.
+End-to-end flow from Excel input to the dashboard.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  INPUT                                                                      │
 │  Excel job export  ·  sheet "Master Plain (Anon)"                           │
-│  • Nothing seeded: the library starts empty                                 │
 │  • Sidebar upload, or POST /api/reports                                     │
+│  • Sample report ships in data/app.db for a ready dashboard on first open   │
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │
                                     ▼
@@ -120,10 +150,9 @@ techniques, models, or outputs involved.
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  2. PERSIST (SQLite)                                    data/app.db · db.py │
-│  • Replace active dataset in jobs table (full replace, not append)          │
-│  • Append-only log in dataset_uploads (source, row count, timestamp)        │
+│  • Each upload becomes a report (library, not a single active dataset)      │
+│  • Job rows stored per report; finished payload stored as JSON              │
 │  • Indexes on customer_id, sales_in, job_id                                 │
-│  • Derived columns are NOT stored; recomputed on every read                 │
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │
                                     ▼
@@ -140,15 +169,8 @@ techniques, models, or outputs involved.
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │
                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  4. DATASTORE                                           DataStore (in RAM)  │
-│  • Thread-safe pandas DataFrame                                             │
-│  • version counter bumps on replace → invalidates ML caches                 │
-└─────────────────────────┬───────────────────────────┬───────────────────────┘
-                          │                           │
-                          ▼                           ▼
 ┌──────────────────────────────────────┐  ┌───────────────────────────────────┐
-│  5a. ANALYTICS (rules / heuristics)  │  │  5b. MACHINE LEARNING             │
+│  4a. ANALYTICS (rules / heuristics)  │  │  4b. MACHINE LEARNING             │
 │                                      │  │                                   │
 │  Customer value                      │  │  Quote Guard (price_model.py)     │
 │  · Rank by va_amount_base            │  │  · HistGradientBoostingRegressor  │
@@ -188,44 +210,38 @@ techniques, models, or outputs involved.
                    └──────────────────┬─────────────────────┘
                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  6. NARRATIVE BRIEFS                  analytics/narrative.py · llm/writer.py │
+│  5. NARRATIVE BRIEFS                  analytics/narrative.py · llm/writer.py │
 │  • Prose written per dataset by the model; templates as fallback            │
 │  • Every figure computed, then written back over the model's output         │
 │  • Guardrails reject invented, rounded or hedged numbers, then retry once   │
 │  • Shape: title · 3 metrics · hero finding · breakdown table · actions      │
-│  • Executive summary ranks all insights by annual value at stake and        │
+│  • Executive summary ranks insights by annual value at stake and            │
 │    drops any whose figure is zero                                           │
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  7. API                                              FastAPI · main.py :8000│
-│  • GET /api/summary, /insights/*, /ml/*, /executive-summary                 │
-│  • Each insight returns raw figures + brief JSON                            │
-│  • POST /api/data/upload replaces dataset and retrains models               │
+│  6. REPORT PAYLOAD                                     report_builder.py    │
+│  • One build pass: analytics + Quote Guard + every brief                    │
+│  • Stored on the report row; reopening is a database read, not a rebuild    │
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  8. FRONTEND                                         React + Vite :5173     │
-│  • Vite proxies /api → :8000                                                │
-│  • DashboardDataContext: parallel fetch of all endpoints on load / upload   │
-│  • AppLayout: sidebar, dataset meta bar                                     │
-└───────────────────────────────────┬─────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  9. UI OUTPUT                                                               │
-│  Brief: metrics → key finding → breakdown → actions                         │
-│  Then supporting charts (Recharts) and detail tables                        │
-│  Overview: executive findings + currency split                              │
+│  7. API / UI                                                                │
+│  • FastAPI report library: list / get / upload / delete                     │
+│  • React dashboard: one payload per selected report                         │
+│  • Local: Vite :5173 proxies /api → :8000                                   │
+│  • Docker: nginx :8080 serves UI and proxies /api → backend                 │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 | Loop | Behaviour |
 | --- | --- |
-| **Upload** | Replace `jobs` → bump DataStore version → invalidate ML cache → retrain → frontend reload |
-| **Restart** | If `jobs` is non-empty, skip Excel → read SQLite → derive → continue from DataStore |
+| **Upload** | Create report → store jobs → background build → poll until ready |
+| **Reopen** | `GET /api/reports/{id}` returns the stored payload (~1s) |
+| **Delete** | Removes the report and its job rows together |
+| **Restart mid-build** | Interrupted reports are marked failed on next startup |
 
 ---
 
@@ -234,21 +250,28 @@ techniques, models, or outputs involved.
 ```
 wg-baird-sales-intelligence/
 ├── README.md
+├── docker-compose.yml
+├── .env.example             # Copy to .env at repo root (git-ignored)
 ├── data/
 │   ├── sample/              # Sample workbook, committed
 │   └── app.db               # Datasets and reports (ships with the example)
 ├── backend/
+│   ├── Dockerfile
 │   ├── requirements.txt
 │   └── app/
 │       ├── main.py          # FastAPI routes
-│       ├── config.py        # FX rate and thresholds
-│       ├── data_loader.py   # Excel → clean → derive → DataStore
+│       ├── config.py        # Loads root .env; FX rate and thresholds
+│       ├── data_loader.py   # Excel → clean → derive
 │       ├── db.py            # SQLite schema and helpers
-│       ├── analytics/       # Seven insight modules + narrative briefs
+│       ├── report_builder.py
+│       ├── analytics/       # Insight modules + narrative briefs
+│       ├── llm/             # Commentary writer + guardrails
 │       └── ml/              # Quote Guard price model
 └── frontend/
+    ├── Dockerfile
+    ├── nginx.conf           # Serves UI; proxies /api → backend
     ├── package.json
-    ├── vite.config.ts       # proxies /api → :8000
+    ├── vite.config.ts       # Dev: proxies /api → :8000
     └── src/
         ├── App.tsx
         ├── api/             # Typed client and response types
@@ -303,10 +326,10 @@ dashboard polls and shows live progress ("Writing commentary: Pricing
 integrity", 67%). While a report builds it shows only that progress, never the
 previously open report.
 
-**Generation runs once.** Analytics, both models and every piece of commentary
-are produced in one pass and stored as a single payload. Reopening a report is
-a database read of about a second, not a rebuild, so returning later costs
-nothing and consumes no API credit.
+**Generation runs once.** Analytics, the Quote Guard model and every piece of
+commentary are produced in one pass and stored as a single payload. Reopening a
+report is a database read of about a second, not a rebuild, so returning later
+costs nothing and consumes no API credit.
 
 **Deleting** a report removes its stored dataset with it, so nothing is
 orphaned. A report left mid-build by a restart is marked as interrupted on the
@@ -328,11 +351,16 @@ shipped example to stay exactly as it is.
 
 ## Configuration
 
-Assumptions live in `backend/app/config.py` and can be challenged or overridden
-without changing analytics code:
+Settings are read from the **repository-root** `.env` (see `.env.example`).
+Defaults and thresholds also live in `backend/app/config.py` so assumptions can
+be challenged without changing analytics code.
 
 | Setting | Default | Purpose |
 | --- | --- | --- |
+| `OPENAI_API_KEY` | _(empty)_ | Optional; enables per-dataset commentary |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Model used when a key is present |
+| `LLM_NARRATIVE_ENABLED` | `true` | Set `false` to force templates even with a key |
+| `LLM_TIMEOUT_SECONDS` | `25` | Fallback to templates if the model is slow |
 | `BAIRD_EUR_GBP` | `0.86` | Planning EUR→GBP rate |
 | At-risk / dormant multiples | `1.25×` / `2.5×` own order gap | Rules-based retention |
 | Fallback absolute days | `120` / `270` | Customers with too little history |

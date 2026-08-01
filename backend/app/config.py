@@ -12,10 +12,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Local settings and secrets live in backend/.env, which is git-ignored.
+# Local settings and secrets live in the repo-root .env, which is git-ignored.
 # Values already present in the real environment win, so a deployment can
 # set them without a file.
-load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=False)
 
 
 def _flag(name: str, default: bool) -> bool:
