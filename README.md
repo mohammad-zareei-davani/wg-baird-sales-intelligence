@@ -72,9 +72,8 @@ macOS / Linux:
 ```
 
 API: `http://localhost:8000`  
-On first start, if `data/app.db` is empty, the sample workbook at
-`data/raw/sample_data.xlsx` is loaded. Models train on first request; the
-initial dashboard load may take up to a minute.
+Nothing is seeded. On first start the report library is empty and the dashboard
+asks for a workbook. `data/app.db` is created automatically on first run.
 
 ### Frontend
 
@@ -98,8 +97,8 @@ techniques, models, or outputs involved.
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  INPUT                                                                      │
 │  Excel job export  ·  sheet "Master Plain (Anon)"                           │
-│  • First boot: data/raw/sample_data.xlsx                                    │
-│  • Later: sidebar upload or POST /api/data/upload                           │
+│  • Nothing seeded: the library starts empty                                 │
+│  • Sidebar upload, or POST /api/reports                                     │
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │
                                     ▼
@@ -229,10 +228,8 @@ techniques, models, or outputs involved.
 ```
 wg-baird-sales-intelligence/
 ├── README.md
-├── data/
-│   ├── raw/                 # sample_data.xlsx (seed; not committed)
-│   ├── uploads/             # upload scratch (not committed)
-│   └── app.db               # SQLite store of record (not committed)
+├── data/                    # Created on first run; git-ignored
+│   └── app.db               # Datasets and generated reports
 ├── backend/
 │   ├── requirements.txt
 │   └── app/

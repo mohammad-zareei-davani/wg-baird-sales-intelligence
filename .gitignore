@@ -9,10 +9,7 @@ build/
 .env.*
 !.env.example
 *.log
-data/raw/*
-!data/raw/.gitkeep
-data/uploads/*
-!data/uploads/.gitkeep
-data/app.db
-data/*.db-journal
+# Local data. The SQLite store is created on first run and holds every
+# uploaded dataset and generated report, so none of it belongs in git.
+data/
 .DS_Store
