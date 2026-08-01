@@ -1,107 +1,67 @@
 # W&G Baird Sales Intelligence
 
-Commercial analytics over W&G Baird job-level sales data. The platform turns a
-print-job Excel extract into board-ready briefings: what the number is, what it
-means, and what to do about it, with charts as supporting evidence rather than the
-argument.
+A commercial analytics platform that turns a print-job Excel extract into
+board-ready briefings. Each insight states what the number is, what it means
+commercially, and what to do about it, with charts as supporting evidence
+rather than the argument.
+
+Built for the W&G Baird data analytics assessment.
 
 | Layer | Stack |
 | --- | --- |
-| Backend | FastAPI, pandas, scikit-learn, SQLite |
-| Frontend | React, TypeScript, Tailwind CSS, Recharts |
-| Deploy | Docker Compose (nginx + uvicorn) |
-| Data | Excel interchange → SQLite store of record |
+| Backend | FastAPI, pandas, scikit-learn, SQLAlchemy, SQLite |
+| Frontend | React 18, TypeScript, Tailwind CSS, Recharts, Vite |
+| Narrative | OpenAI, with validated fallback to built-in templates |
+| Deployment | Docker Compose, or two local dev servers |
 
 ---
 
-## Features
+## Contents
 
-| Page | Question answered |
-| --- | --- |
-| **Executive Briefing** | What the data is telling you, ranked by what is at stake |
-| **Customer Value** | Where value added actually comes from |
-| **Recurring Revenue** | Reprint / repeat work already won |
-| **Reorder Forecasting** | Who is due to order next |
-| **Account Retention** | Customers who have gone quiet relative to their own cadence |
-| **Pricing Integrity** | Margin decided at the point of quoting |
-| **Demand & Capacity** | Shape of the trading year |
-| **Production Turnaround** | How long work takes to leave the building |
-| **Quote Intelligence** | What comparable work actually sells for (ML) |
-
-### Page anatomy
-
-Every insight page follows the same structure so readers learn the format once:
-
-1. Three headline metrics  
-2. One key finding (hero figure + short commercial read)  
-3. Breakdown table with plain-English row descriptions  
-4. Supporting charts and detail tables  
-5. Numbered actions tagged by cost (free / low cost / value at stake)  
-
-The UI uses a single light theme, designed for screen reading and boardroom
-projection.
+- [Quick start](#quick-start)
+- [What the platform does](#what-the-platform-does)
+- [Findings from the sample dataset](#findings-from-the-sample-dataset)
+- [How each page is structured](#how-each-page-is-structured)
+- [Architecture](#architecture)
+- [Analytical method](#analytical-method)
+- [Machine learning](#machine-learning)
+- [Written commentary](#written-commentary)
+- [Reports and persistence](#reports-and-persistence)
+- [Configuration](#configuration)
+- [API reference](#api-reference)
+- [Repository structure](#repository-structure)
+- [Testing](#testing)
+- [Limitations and next steps](#limitations-and-next-steps)
 
 ---
 
-## Getting started
+## Quick start
 
-### Docker (recommended)
+**A worked example ships with the repository.** `data/app.db` already contains
+the sample dataset and its finished report, so the dashboard opens on a
+populated Executive Briefing. No upload, no model training, and no API key are
+required to review the work.
 
-**Prerequisites:** Docker Desktop (or Docker Engine + Compose).
+### Docker
 
 ```bash
-cp .env.example .env   # optional: add OPENAI_API_KEY for generated commentary
 docker compose up --build
 ```
 
-Open **http://localhost:8080**. nginx serves the UI and proxies `/api` to the
-backend. `./data` is mounted into the container so the sample report and any
-uploads persist on the host.
-
-```bash
-docker compose down          # stop
-docker compose down -v       # stop (volumes are host-mounted; data stays in ./data)
-```
-
-| Service | Image role | Host port |
-| --- | --- | --- |
-| `frontend` | Vite build → nginx | `8080` → container `80` |
-| `backend` | uvicorn (FastAPI) | internal only (`backend:8000`) |
+Then open `http://localhost:8080`.
 
 ### Local development
 
-Run the API and the UI in **two terminals**. The frontend proxies `/api/*` to
-port `8000`.
+Two terminals. The frontend proxies `/api/*` to port 8000.
 
 **Prerequisites:** Python 3.11+, Node.js 18+.
-
-Copy `.env.example` to `.env` at the **repository root** if you want optional
-LLM commentary (the app works without a key).
-
-#### Backend
 
 ```bash
 cd backend
 python -m venv .venv
-```
-
-Windows (PowerShell):
-
-```bash
-.\.venv\Scripts\pip install -r requirements.txt
+.\.venv\Scripts\pip install -r requirements.txt          # Windows
 .\.venv\Scripts\python -m uvicorn app.main:app --reload --port 8000
 ```
-
-macOS / Linux:
-
-```bash
-./.venv/bin/pip install -r requirements.txt
-./.venv/bin/python -m uvicorn app.main:app --reload --port 8000
-```
-
-API: `http://localhost:8000`
-
-#### Frontend
 
 ```bash
 cd frontend
@@ -109,201 +69,263 @@ npm install
 npm run dev
 ```
 
-Open the URL Vite prints (default `http://localhost:5173`). Keep the backend
-running while using the dashboard.
+On macOS or Linux use `./.venv/bin/` in place of `.\.venv\Scripts\`.
+Open the URL Vite prints, by default `http://localhost:5173`.
 
-### Sample data
+### Seeing the full pipeline
 
-**A worked example ships with the repository.** `data/app.db` already contains
-the W&G Baird sample dataset and its finished report, so the dashboard opens on
-a populated Executive Briefing with no upload, no model training and no API key
-required. Nothing is generated on startup.
+To watch a report build from scratch, upload
+`data/sample/WG-Baird-Sample-Dataset.xlsx` from the sidebar. The dashboard
+shows live progress while the analysis runs, the model trains and the
+commentary is written. Any report can be deleted from the sidebar, which
+removes its dataset with it.
 
-To see the full pipeline instead, upload `data/sample/WG-Baird-Sample-Dataset.xlsx`
-(or any workbook in the same format) from the sidebar and watch the report
-build. Delete any report from the sidebar to remove it and its dataset.
+---
+
+## What the platform does
+
+Nine pages, each answering one commercial question.
+
+| Page | Question answered |
+| --- | --- |
+| **Executive Briefing** | What the data is telling you, ranked by what is at stake |
+| **Customer Value** | Where value added actually comes from |
+| **Recurring Revenue** | Reprint work already won, and what is overdue |
+| **Reorder Forecasting** | Who is due to order next |
+| **Account Retention** | Customers who have gone quiet against their own cadence |
+| **Pricing Integrity** | Margin decided at the point of quoting |
+| **Demand & Capacity** | The shape of the trading year, and press load |
+| **Production Turnaround** | How long work takes to leave the building |
+| **Quote Intelligence** | What comparable work actually sells for (ML) |
+
+The Executive Briefing is not a fixed list. Every insight is scored on the
+money it has at stake per year, the largest are surfaced, and any insight whose
+figure is zero drops out on its own. Change the dataset and the briefing
+reorders itself.
 
 ---
 
 ## Architecture
 
-End-to-end flow from Excel input to the dashboard.
-
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  INPUT                                                                      │
-│  Excel job export  ·  sheet "Master Plain (Anon)"                           │
-│  • Sidebar upload, or POST /api/reports                                     │
-│  • Sample report ships in data/app.db for a ready dashboard on first open   │
-└───────────────────────────────────┬─────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  1. INGEST & CLEAN                              data_loader.load_dataframe  │
-│  • Read .xlsx (openpyxl)                                                    │
-│  • Rename columns to a stable schema (COLUMN_MAP)                           │
-│  • Coerce numeric and date fields                                           │
-│  • Strip whitespace on IDs / names                                          │
-│  • Drop rows missing sales_in or customer_id                                │
-└───────────────────────────────────┬─────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  2. PERSIST (SQLite)                                    data/app.db · db.py │
-│  • Each upload becomes a report (library, not a single active dataset)      │
-│  • Job rows stored per report; finished payload stored as JSON              │
-│  • Indexes on customer_id, sales_in, job_id                                 │
-└───────────────────────────────────┬─────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  3. DERIVE / PREPROCESS                         data_loader.derive_columns  │
-│  • Currency conversion: Stg=1.0, Euro→GBP at BAIRD_EUR_GBP (default 0.86)   │
-│    → sell_price_base, va_amount_base, cost columns *_base                   │
-│  • Product canonicalisation: merge spelling variants on alphanumeric key    │
-│    → product_type_clean                                                     │
-│  • Lead time: ship_date − sales_in, clipped to [0, 180] days                │
-│  • Margin flags: is_below_cost, is_low_margin (VA% < 25%)                   │
-│  • Calendar: month_start for seasonality / ML panels                        │
-│  • Recency anchor: analytics use max(sales_in), not wall-clock today        │
-└───────────────────────────────────┬─────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌──────────────────────────────────────┐  ┌───────────────────────────────────┐
-│  4a. ANALYTICS (rules / heuristics)  │  │  4b. MACHINE LEARNING             │
-│                                      │  │                                   │
-│  Customer value                      │  │  Quote Guard (price_model.py)     │
-│  · Rank by va_amount_base            │  │  · HistGradientBoostingRegressor  │
-│  · Pareto concentration (80% share)  │  │  · Target: log(sell_price_base)   │
-│  · Split by work / product / sector  │  │  · Features: qty, impressions,    │
-│                                      │  │    plates, press_hrs, paper/      │
-│  Reorder forecasting                 │  │    labour/purchases_base,         │
-│  · Mean gap between order dates      │  │    work_type, region, currency,   │
-│  · Status: Overdue / Due soon /      │  │    product_type_clean             │
-│    On track / Insufficient history   │  │  · Excluded: VA, markup, manadj   │
-│  · 30-day expected value             │  │    (outputs of pricing, not       │
-│                                      │  │     inputs)                       │
-│  Account retention (rules)           │  │  · Train/test split; MAE, MAPE,   │
-│  · Cadence-relative: At Risk 1.25×,  │  │    within 10% / 25%               │
-│    Dormant 2.5× own gap              │  │  · Flag if actual < expected by   │
-│  · Absolute fallbacks: 120 / 270 d   │  │    ≥ 20% (UNDERPRICED_THRESHOLD)  │
-│                                      │  │                                   │
-│  Pricing integrity                   │  │                                   │
-│  · Override / discount / uplift      │  │                                   │
-│  · Below-cost and low-margin jobs    │  │                                   │
-│  · By customer, rep, work type       │  │                                   │
-│                                      │  │                                   │
-│  Seasonality                         │  │                                   │
-│  · Monthly sales & press hours       │  │                                   │
-│  · Seasonal index vs baseline        │  │                                   │
-│  · Seasonal-naive + growth forecast  │  │                                   │
-│                                      │  │                                   │
-│  Delivery                            │  │                                   │
-│  · Median & P90 lead time            │  │                                   │
-│  · By work type / product; monthly   │  │                                   │
-│                                      │  │                                   │
-│  Repeat / reprint business           │  │                                   │
-│  · Title cycles; due-for-reprint     │  │                                   │
-│  · Min cycle 30 days (split orders)  │  │                                   │
-└──────────────────┬───────────────────┘  └─────────────────┬─────────────────┘
-                   │                                        │
-                   └──────────────────┬─────────────────────┘
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  5. NARRATIVE BRIEFS                  analytics/narrative.py · llm/writer.py │
-│  • Prose written per dataset by the model; templates as fallback            │
-│  • Every figure computed, then written back over the model's output         │
-│  • Guardrails reject invented, rounded or hedged numbers, then retry once   │
-│  • Shape: title · 3 metrics · hero finding · breakdown table · actions      │
-│  • Executive summary ranks insights by annual value at stake and            │
-│    drops any whose figure is zero                                           │
-└───────────────────────────────────┬─────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  6. REPORT PAYLOAD                                     report_builder.py    │
-│  • One build pass: analytics + Quote Guard + every brief                    │
-│  • Stored on the report row; reopening is a database read, not a rebuild    │
-└───────────────────────────────────┬─────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  7. API / UI                                                                │
-│  • FastAPI report library: list / get / upload / delete                     │
-│  • React dashboard: one payload per selected report                         │
-│  • Local: Vite :5173 proxies /api → :8000                                   │
-│  • Docker: nginx :8080 serves UI and proxies /api → backend                 │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│ INPUT   Excel job export, sheet "Master Plain (Anon)"                    │
+│         Sidebar upload, or POST /api/reports                             │
+└────────────────────────────────────┬─────────────────────────────────────┘
+                                     ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 1. INGEST & VALIDATE                          data_loader.load_dataframe │
+│    Rename to a stable schema · coerce types · drop unusable rows         │
+│    Rejects a bad workbook before a report row is created                 │
+└────────────────────────────────────┬─────────────────────────────────────┘
+                                     ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 2. PERSIST                                              data/app.db · db │
+│    report_jobs: the dataset behind each report                           │
+│    reports: status, live progress, and the finished report as JSON       │
+└────────────────────────────────────┬─────────────────────────────────────┘
+                                     ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 3. DERIVE                                     data_loader.derive_columns │
+│    Currency conversion to GBP  →  *_base columns                         │
+│    Product canonicalisation    →  product_type_clean                     │
+│    Lead time, margin flags, calendar month                               │
+│    Recency anchored to max(sales_in), never wall-clock today             │
+└────────────────────────────────────┬─────────────────────────────────────┘
+                                     ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 4. BUILD REPORT (background thread)                    report_builder.py │
+│    ┌────────────────────────────┐  ┌──────────────────────────────────┐  │
+│    │ Analytics (7 modules)      │  │ Machine learning                 │  │
+│    │ value · repeat · reorder   │  │ Quote Guard price benchmark      │  │
+│    │ churn · pricing            │  │ HistGradientBoostingRegressor    │  │
+│    │ seasonality · delivery     │  │ spec and cost inputs only        │  │
+│    └────────────┬───────────────┘  └────────────────┬─────────────────┘  │
+│                 └──────────────┬────────────────────┘                    │
+│                                ▼                                         │
+│    Narrative: computed brief → model rewrites prose → validated          │
+│    Executive summary: score every insight, rank, drop the empty ones     │
+└────────────────────────────────────┬─────────────────────────────────────┘
+                                     ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 5. STORE & SERVE                                                         │
+│    Whole payload saved once. Reopening is a ~1s read, never a rebuild    │
+└────────────────────────────────────┬─────────────────────────────────────┘
+                                     ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 6. DASHBOARD                        React · TypeScript · Tailwind        │
+│    Report library · live progress · nine insight pages                   │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
-
-| Loop | Behaviour |
-| --- | --- |
-| **Upload** | Create report → store jobs → background build → poll until ready |
-| **Reopen** | `GET /api/reports/{id}` returns the stored payload (~1s) |
-| **Delete** | Removes the report and its job rows together |
-| **Restart mid-build** | Interrupted reports are marked failed on next startup |
 
 ---
 
-## Repository structure
+## Analytical method
 
-```
-wg-baird-sales-intelligence/
-├── README.md
-├── docker-compose.yml
-├── .env.example             # Copy to .env at repo root (git-ignored)
-├── data/
-│   ├── sample/              # Sample workbook, committed
-│   └── app.db               # Datasets and reports (ships with the example)
-├── backend/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── app/
-│       ├── main.py          # FastAPI routes
-│       ├── config.py        # Loads root .env; FX rate and thresholds
-│       ├── data_loader.py   # Excel → clean → derive
-│       ├── db.py            # SQLite schema and helpers
-│       ├── report_builder.py
-│       ├── analytics/       # Insight modules + narrative briefs
-│       ├── llm/             # Commentary writer + guardrails
-│       └── ml/              # Quote Guard price model
-└── frontend/
-    ├── Dockerfile
-    ├── nginx.conf           # Serves UI; proxies /api → backend
-    ├── package.json
-    ├── vite.config.ts       # Dev: proxies /api → :8000
-    └── src/
-        ├── App.tsx
-        ├── api/             # Typed client and response types
-        ├── data/            # DashboardDataContext
-        ├── layout/          # App shell and navigation
-        ├── components/      # Brief, charts, upload control
-        ├── pages/           # One page per insight
-        └── theme/           # Design tokens
-```
+Choices that materially affect the numbers, and why they were made.
 
-### Route map
+**Value added, not revenue.** Customers are ranked by what the business keeps
+after paper, press and bought-in costs. Ranking by turnover changes which
+accounts look most important, and points sales effort at the wrong ones.
 
-Every page reads from the one payload fetched for the selected report, so
-switching between insights involves no further requests.
+**Concentration is measured, not assumed.** A fixed "top five" is arbitrary and
+frequently wrong. The platform finds the largest proportional gap in the ranked
+list, detects accounts close enough to read as level, and finds where the field
+flattens. In the sample dataset that is two accounts effectively tied at the
+top, four standing clearly ahead, and a flat field from the fifth. The chart
+colours those four and marks the average account, so the written claim is
+something a reader can verify by looking.
 
-| Route | Page |
+**Churn is relative to each customer's own habit.** Six weeks of silence from a
+fortnightly customer is a genuine warning; the same six weeks from a
+twice-a-year customer means nothing. Accounts with too little history fall back
+to absolute thresholds.
+
+**Recency anchors to the data, not to today.** An extract is a point in time.
+Measuring against wall-clock today would make every customer look dormant
+purely because the file is a few months old.
+
+**Reprint cycles exclude split orders.** Two runs of a title a few days apart
+are one order split across lines, not a reprint. Titles with a cycle under 30
+days stay in the revenue figures but are excluded from the call list, where
+they would otherwise always look overdue.
+
+**Turnaround is judged per product.** A 30,000-copy educational book is not a
+business-card run, so each job is compared against its own product's norm
+rather than one company-wide target.
+
+**Executive findings are ranked on annual money at stake.** Historical totals
+are annualised so a long extract does not outrank a genuinely current figure.
+Turnaround is deliberately left unscored: the value of slow jobs is revenue
+that was delivered and paid for, not money at risk, and scoring it would put a
+misleading figure at the top of the briefing.
+
+---
+
+## Machine learning
+
+**Quote Guard** predicts what comparable work has sold for, giving estimators a
+reference point at the moment of quoting and flagging jobs sold well below the
+going rate.
+
+| | |
 | --- | --- |
-| `/` | Executive Briefing |
-| `/customer-value` | Customer Value |
-| `/repeat-business` | Recurring Revenue |
-| `/reorder` | Reorder Forecasting |
-| `/churn` | Account Retention |
-| `/pricing` | Pricing Integrity |
-| `/seasonality` | Demand & Capacity |
-| `/delivery` | Production Turnaround |
-| `/quote-guard` | Quote Intelligence |
+| Model | `HistGradientBoostingRegressor` on `log(sell_price_base)` |
+| Features | Quantity, impressions, plates, press hours, paper, labour, bought-in cost, work type, region, currency, product type |
+| Excluded | Value added, markup, manual adjustment |
+| Typical error | 6.7% on unseen jobs |
+| Within 25% | 91.5% |
+| Held out | 1,533 jobs, from 6,130 priced |
 
-### API
+The exclusions matter more than the score. Value added, markup and the manual
+adjustment are consequences of the pricing decision, not inputs to it.
+Including them would let the model reconstruct the answer and report an
+accuracy it has not earned.
+
+Price is modelled in log space because job values span four orders of
+magnitude; a flat error target would let a handful of very large jobs dominate
+the fit.
+
+---
+
+## Written commentary
+
+The prose on each page is written for the dataset actually loaded, so importing
+a different extract produces commentary about that extract rather than wording
+bent to fit it. The division of labour is strict.
+
+**The analytics own every number.** Figures are computed, formatted, then
+written back over the model's output field by field. Nothing numeric on screen
+depends on the model having been careful.
+
+**The model only chooses words.** It receives the figures and a factual note on
+what the insight measures. It never sees a finished draft to copy, and is never
+asked to calculate anything.
+
+**Output is validated before display.** Every numeric token in the generated
+text must appear in the computed figures, so a fabricated, silently rounded or
+hedged number rejects the draft. So does commentary thinner than the template
+it would replace: instructions in the explanation slot, table descriptions that
+restate the figure beside them, or actions with no reasoning. A rejected draft
+gets one corrective attempt with the specific failures fed back.
+
+**It degrades safely.** With no API key, an unreachable API, a timeout or a
+failed validation, the platform renders deterministic templates and keeps
+working. The key is optional, and the shipped report needs none.
+
+Each page states which path produced its commentary. `GET /api/meta` reports
+whether generation is active.
+
+---
+
+## Reports and persistence
+
+The platform holds a **library of reports** rather than one active dataset.
+
+**Uploading** validates the workbook, stores its job rows against a new report,
+and starts generation in the background. The request returns immediately; the
+dashboard polls and shows live progress. While a report builds it shows only
+that progress, never the previously open report.
+
+**Generation runs once.** Analytics, the model and every piece of commentary
+are produced in one pass and stored as a single payload. Reopening a report is
+a database read of about a second, so returning later costs nothing and
+consumes no API credit.
+
+**Deleting** a report removes its stored dataset with it. A report left
+mid-build by a restart is marked as interrupted on the next startup rather than
+sitting at "generating" forever.
+
+| Table | Holds |
+| --- | --- |
+| `reports` | Name, timestamps, status, live progress, dataset facts, finished report as JSON |
+| `report_jobs` | The job rows behind each report, so the analysis can be rebuilt |
+
+`data/app.db` is committed with the sample report already built, but it is also
+the live working file. Uploading or deleting reports locally will show it as
+modified in git. Restore it with `git checkout -- data/app.db` if you want the
+shipped example to stay exactly as it is.
+
+---
+
+## Configuration
+
+Every assumption a reviewer might reasonably challenge lives in
+`backend/app/config.py` rather than being buried in the analytics.
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `EUR_TO_GBP` | 0.86 | Planning rate for converting Euro-billed work |
+| `AT_RISK_INTERVAL_MULTIPLE` | 1.25 | Silence beyond this multiple of a customer's own gap is At Risk |
+| `DORMANT_INTERVAL_MULTIPLE` | 2.5 | Beyond this, Dormant |
+| `FALLBACK_AT_RISK_DAYS` | 120 | Absolute threshold when there is no cadence |
+| `FALLBACK_DORMANT_DAYS` | 270 | As above |
+| `MIN_ORDERS_FOR_CADENCE` | 3 | Orders needed before a cadence is trusted |
+| `DUE_SOON_DAYS` | 14 | Reorder window counted as due soon |
+| `LOW_MARGIN_VA_PCT` | 0.25 | Below this VA share, too thin to carry overhead |
+| `UNDERPRICED_THRESHOLD_PCT` | 0.20 | Shortfall against the benchmark that flags a job |
+| `MAX_PLAUSIBLE_LEAD_DAYS` | 180 | Longer gaps treated as data artefacts |
+| `MIN_REPRINT_CYCLE_DAYS` | 30 | Shorter cycles treated as split orders |
+
+Secrets and environment overrides live in `.env` at the project root, which is
+git-ignored and read by both the local backend and Docker Compose. Copy
+`.env.example` to start:
+
+```bash
+OPENAI_API_KEY=sk-...          # optional; templates are used when absent
+OPENAI_MODEL=gpt-4o-mini
+LLM_NARRATIVE_ENABLED=true
+LLM_TIMEOUT_SECONDS=25
+BAIRD_EUR_GBP=0.86
+```
+
+---
+
+## API reference
 
 | Endpoint | Returns |
 | --- | --- |
-| `GET /api/reports` | Every stored report, newest first (drives the sidebar) |
+| `GET /api/reports` | Every report, newest first. Drives the sidebar |
 | `GET /api/reports/{id}` | A report's status and, once ready, its full payload |
 | `POST /api/reports` | Upload a workbook and start generating (multipart `file`) |
 | `DELETE /api/reports/{id}` | Delete a report and the dataset behind it |
@@ -316,58 +338,50 @@ formatted server-side so prose and tables cannot disagree.
 
 ---
 
-## Reports and persistence
+## Repository structure
 
-The app holds a **library of reports** rather than one active dataset.
-
-**Uploading** validates the workbook, stores its job rows against a new report,
-and starts generation in the background. The request returns immediately; the
-dashboard polls and shows live progress ("Writing commentary: Pricing
-integrity", 67%). While a report builds it shows only that progress, never the
-previously open report.
-
-**Generation runs once.** Analytics, the Quote Guard model and every piece of
-commentary are produced in one pass and stored as a single payload. Reopening a
-report is a database read of about a second, not a rebuild, so returning later
-costs nothing and consumes no API credit.
-
-**Deleting** a report removes its stored dataset with it, so nothing is
-orphaned. A report left mid-build by a restart is marked as interrupted on the
-next startup rather than sitting at "generating" forever.
-
-Two tables in `data/app.db`:
-
-| Table | Holds |
-| --- | --- |
-| `reports` | Name, timestamps, status, live progress, dataset facts, and the finished report as JSON |
-| `report_jobs` | The job rows behind each report, so the analysis can be rebuilt |
-
-`data/app.db` is committed with the sample report already built, but it is also
-the live working file. Uploading or deleting reports locally will show it as
-modified in git; restore it with `git checkout -- data/app.db` if you want the
-shipped example to stay exactly as it is.
+```
+wg-baird-sales-intelligence/
+├── README.md
+├── docker-compose.yml
+├── .env.example                   # Copy to .env; git-ignored
+├── data/
+│   ├── sample/                    # Sample workbook, committed
+│   └── app.db                     # Datasets and reports; ships with the example
+├── backend/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── app/
+│   │   ├── main.py                # FastAPI routes
+│   │   ├── config.py              # Every tunable assumption
+│   │   ├── db.py                  # Schema and report lifecycle
+│   │   ├── data_loader.py         # Ingest, validate, derive
+│   │   ├── report_builder.py      # One-pass build with progress
+│   │   ├── analytics/             # Seven insight modules + narrative
+│   │   ├── ml/price_model.py      # Quote Guard
+│   │   └── llm/
+│   │       ├── writer.py          # Prompting and merge-back
+│   │       └── guardrails.py      # Numeric and quality validation
+│   └── tests/test_guardrails.py
+└── frontend/
+    ├── Dockerfile
+    ├── nginx.conf
+    └── src/
+        ├── api/                   # Typed client
+        ├── components/            # Brief anatomy, charts, tables
+        ├── data/                  # Report context and polling
+        ├── layout/                # Shell, sidebar, report library
+        └── pages/                 # Nine insight pages
+```
 
 ---
 
-## Configuration
+## Testing
 
-Settings are read from the **repository-root** `.env` (see `.env.example`).
-Defaults and thresholds also live in `backend/app/config.py` so assumptions can
-be challenged without changing analytics code.
+The guardrails protecting generated commentary have their own tests, covering
+invented figures, silently rounded figures, hedged figures, fabricated currency
+amounts, and identifiers such as `CUST_011` that merely look numeric.
 
-| Setting | Default | Purpose |
-| --- | --- | --- |
-| `OPENAI_API_KEY` | _(empty)_ | Optional; enables per-dataset commentary |
-| `OPENAI_MODEL` | `gpt-4o-mini` | Model used when a key is present |
-| `LLM_NARRATIVE_ENABLED` | `true` | Set `false` to force templates even with a key |
-| `LLM_TIMEOUT_SECONDS` | `25` | Fallback to templates if the model is slow |
-| `BAIRD_EUR_GBP` | `0.86` | Planning EUR→GBP rate |
-| At-risk / dormant multiples | `1.25×` / `2.5×` own order gap | Rules-based retention |
-| Fallback absolute days | `120` / `270` | Customers with too little history |
-| Low-margin VA threshold | `25%` | Pricing integrity |
-| Underpriced threshold | `20%` | Quote Guard flags |
-| Max plausible lead time | `180` days | Delivery averages |
-| Min reprint cycle | `30` days | Exclude split orders from “due” list |
-
-Recency analytics anchor to the latest booking date in the data, not wall-clock
-today, so a months-old extract does not make every customer look dormant.
+```bash
+cd backend && .\.venv\Scripts\python tests\test_guardrails.py
+```
