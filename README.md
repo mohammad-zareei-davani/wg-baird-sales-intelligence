@@ -26,7 +26,6 @@ argument.
 | **Demand & Capacity** | Shape of the trading year |
 | **Production Turnaround** | How long work takes to leave the building |
 | **Quote Intelligence** | What comparable work actually sells for (ML) |
-| **Retention Risk** | Who is unlikely to order again soon (ML) |
 
 ### Page anatomy
 
@@ -167,17 +166,17 @@ techniques, models, or outputs involved.
 │    Dormant 2.5× own gap              │  │  · Flag if actual < expected by   │
 │  · Absolute fallbacks: 120 / 270 d   │  │    ≥ 20% (UNDERPRICED_THRESHOLD)  │
 │                                      │  │                                   │
-│  Pricing integrity                   │  │  Churn risk (churn_model.py)      │
-│  · Override / discount / uplift      │  │  · HistGradientBoostingClassifier │
-│  · Below-cost and low-margin jobs    │  │  · Unit: customer-month panel     │
-│  · By customer, rep, work type       │  │  · Label: ordered within 60 days? │
-│                                      │  │  · Features from history before   │
-│  Seasonality                         │  │    observation date only          │
-│  · Monthly sales & press hours       │  │    (no leakage)                   │
-│  · Seasonal index vs baseline        │  │  · Time-based train/test split    │
-│  · Seasonal-naive + growth forecast  │  │    (not random)                   │
-│                                      │  │  · Benchmark: overdue-gap AUC     │
-│  Delivery                            │  │  · Bands: High / Medium / Low     │
+│  Pricing integrity                   │  │                                   │
+│  · Override / discount / uplift      │  │                                   │
+│  · Below-cost and low-margin jobs    │  │                                   │
+│  · By customer, rep, work type       │  │                                   │
+│                                      │  │                                   │
+│  Seasonality                         │  │                                   │
+│  · Monthly sales & press hours       │  │                                   │
+│  · Seasonal index vs baseline        │  │                                   │
+│  · Seasonal-naive + growth forecast  │  │                                   │
+│                                      │  │                                   │
+│  Delivery                            │  │                                   │
 │  · Median & P90 lead time            │  │                                   │
 │  · By work type / product; monthly   │  │                                   │
 │                                      │  │                                   │
@@ -246,7 +245,7 @@ wg-baird-sales-intelligence/
 │       ├── data_loader.py   # Excel → clean → derive → DataStore
 │       ├── db.py            # SQLite schema and helpers
 │       ├── analytics/       # Seven insight modules + narrative briefs
-│       └── ml/              # Quote Guard + churn risk
+│       └── ml/              # Quote Guard price model
 └── frontend/
     ├── package.json
     ├── vite.config.ts       # proxies /api → :8000
@@ -276,7 +275,6 @@ switching between insights involves no further requests.
 | `/seasonality` | Demand & Capacity |
 | `/delivery` | Production Turnaround |
 | `/quote-guard` | Quote Intelligence |
-| `/churn-risk` | Retention Risk |
 
 ### API
 

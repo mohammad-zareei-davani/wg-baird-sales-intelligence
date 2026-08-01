@@ -1,10 +1,10 @@
 """Builds a complete report from an uploaded dataset, once.
 
 Everything the dashboard renders is produced here and stored as a single
-payload: the analytics, the two models, and the written commentary. Returning
-to a report later is then a database read rather than a rebuild, which matters
-because the models take seconds to fit and each piece of commentary is a
-separate call to the language model.
+payload: the analytics, the pricing model, and the written commentary.
+Returning to a report later is then a database read rather than a rebuild,
+which matters because the model takes seconds to fit and each piece of
+commentary is a separate call to the language model.
 
 The work runs in a background thread. Progress is written to the database as
 it goes so the dashboard can show what is happening rather than an
@@ -28,7 +28,6 @@ from app.analytics.repeat_business import repeat_business_analysis
 from app.analytics.seasonality import seasonality_analysis
 from app.data_loader import load_jobs
 from app.llm.writer import generate_brief
-from app.ml.churn_model import train_churn_model
 from app.ml.price_model import train_price_model
 
 log = logging.getLogger("wgb.report")
@@ -43,7 +42,6 @@ INSIGHT_LABELS = {
     "seasonality": "Demand and capacity",
     "delivery": "Production turnaround",
     "quote_guard": "Quote intelligence",
-    "churn_risk": "Retention risk",
 }
 
 
@@ -120,11 +118,8 @@ def build_payload(df: pd.DataFrame, source: str, report_id: int | None = None) -
         "delivery": delivery_analysis(df),
     }
 
-    progress("Training the pricing model", 30)
+    progress("Training the pricing model", 35)
     results["quote_guard"] = train_price_model(df)
-
-    progress("Training the retention model", 40)
-    results["churn_risk"] = train_churn_model(df)
 
     builders = {
         "customer_value": narrative.customer_value_brief,
@@ -135,7 +130,6 @@ def build_payload(df: pd.DataFrame, source: str, report_id: int | None = None) -
         "seasonality": narrative.seasonality_brief,
         "delivery": narrative.delivery_brief,
         "quote_guard": narrative.quote_guard_brief,
-        "churn_risk": narrative.churn_model_brief,
     }
 
     summary = _summary(df, source)
@@ -158,7 +152,6 @@ def build_payload(df: pd.DataFrame, source: str, report_id: int | None = None) -
     items = [
         {"area": area, "brief": results[area]["brief"], "result": results[area]}
         for area in results
-        if area != "churn_risk"
     ]
     findings = narrative.executive_summary(items, limit=5, years=years)
 
@@ -172,7 +165,6 @@ def build_payload(df: pd.DataFrame, source: str, report_id: int | None = None) -
         "seasonality": results["seasonality"],
         "delivery": results["delivery"],
         "quoteGuard": results["quote_guard"],
-        "churnRisk": results["churn_risk"],
         "executive": {
             "findings": findings,
             "considered": len(items),

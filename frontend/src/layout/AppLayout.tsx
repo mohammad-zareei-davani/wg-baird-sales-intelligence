@@ -32,10 +32,7 @@ const NAV_GROUPS: { heading: string | null; items: NavItem[] }[] = [
   },
   {
     heading: "Predictive",
-    items: [
-      { to: "/quote-guard", label: "Quote Intelligence" },
-      { to: "/churn-risk", label: "Retention Risk" },
-    ],
+    items: [{ to: "/quote-guard", label: "Quote Intelligence" }],
   },
 ];
 
@@ -97,7 +94,9 @@ export function AppLayout() {
               </div>
             ))}
 
-          <ReportLibrary />
+          <div className={hasReport ? "border-t border-rail-edge pt-5" : undefined}>
+            <ReportLibrary />
+          </div>
         </div>
 
         <div className="border-t border-rail-edge px-4 py-3.5">

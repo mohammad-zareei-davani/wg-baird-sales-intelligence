@@ -10,7 +10,6 @@ import { PricingPage } from "./pages/PricingPage";
 import { SeasonalityPage } from "./pages/SeasonalityPage";
 import { DeliveryPage } from "./pages/DeliveryPage";
 import { QuoteGuardPage } from "./pages/QuoteGuardPage";
-import { ChurnRiskPage } from "./pages/ChurnRiskPage";
 
 export default function App() {
   return (
@@ -27,7 +26,6 @@ export default function App() {
               <Route path="seasonality" element={<SeasonalityPage />} />
               <Route path="delivery" element={<DeliveryPage />} />
               <Route path="quote-guard" element={<QuoteGuardPage />} />
-              <Route path="churn-risk" element={<ChurnRiskPage />} />
             </Route>
         </Routes>
       </BrowserRouter>

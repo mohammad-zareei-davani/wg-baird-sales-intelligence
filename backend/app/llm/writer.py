@@ -241,11 +241,6 @@ AREA_NOTES = {
         "for, from specification and input costs only. It gives estimators a reference "
         "point and flags jobs sold well below the going rate."
     ),
-    "churn_risk": (
-        "A model predicting whether each account will order again within the look-ahead "
-        "window, trained on earlier months and tested only on later ones. It ranks the "
-        "call list rather than settling any single account."
-    ),
     "data_quality": (
         "How the figures are prepared before any analysis: the order book is billed in "
         "more than one currency, so everything is converted to one reporting currency "

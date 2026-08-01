@@ -169,9 +169,6 @@ export function ActionList({ actions }: { actions: BriefType["actions"] }) {
           </li>
         ))}
       </ol>
-      {actions.footnote && (
-        <p className="mt-3 text-[12px] leading-relaxed text-ink-muted">{actions.footnote}</p>
-      )}
     </section>
   );
 }

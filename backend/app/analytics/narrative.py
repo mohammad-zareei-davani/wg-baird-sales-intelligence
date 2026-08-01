@@ -478,7 +478,6 @@ def churn_brief(result: dict) -> dict:
 def seasonality_brief(result: dict) -> dict:
     s = result["summary"]
     ratio = s.get("peak_to_trough_ratio")
-    mape = s.get("sales_forecast_mape")
 
     return _brief(
         title="The Shape of Your Trading Year",
@@ -542,8 +541,7 @@ def seasonality_brief(result: dict) -> dict:
                     "because it uses capacity that is otherwise paid for and idle.",
                 ),
             ],
-        }
-        | ({"footnote": f"Backtested against recent months, the projection has been out by about {pct(mape, 0)} on average. That is close enough to plan capacity around, but not close enough to commit to."} if mape is not None else {}),
+        },
     )
 
 
@@ -764,86 +762,6 @@ def quote_guard_brief(result: dict) -> dict:
                     f"These sold more than {result['threshold_pct']:.0f}% below what comparable work "
                     f"achieved. Some will be deliberate commercial decisions and worth repeating; "
                     f"the rest are drift worth understanding.",
-                ),
-            ],
-        },
-    )
-
-
-# --- Churn risk model -------------------------------------------------------
-
-def churn_model_brief(result: dict) -> dict:
-    if not result.get("available"):
-        return _brief(
-            title="Predicted Retention Risk",
-            metrics=[],
-            hero={"value": "n/a", "caption": "not enough order history",
-                  "body": result.get("reason", "The model needs more ordering history before its predictions can be trusted.")},
-            breakdown={"title": "", "columns": [], "rows": []},
-            actions={"title": "", "items": []},
-        )
-
-    m = result["metrics"]
-    bands = result["band_counts"]
-    verdict = "Better than the simple rule" if m["beats_baseline"] else "No better than the simple rule"
-
-    return _brief(
-        title="Who Is Unlikely to Come Back",
-        metrics=[
-            _metric("High risk", count(bands.get("High", 0)), f"Unlikely to order in {m['lookahead_days']} days"),
-            _metric("Model score", f"{m['auc']:.3f}", f"Against a benchmark of {m['baseline_auc']:.3f}"),
-            _metric("Tested on", count(m["test_rows"]), "Later months than it learned from"),
-        ],
-        hero={
-            "value": count(bands.get("High", 0)),
-            "caption": f"accounts unlikely to order within {m['lookahead_days']} days",
-            "body": (
-                f"Rather than asking who has gone quiet, this asks how likely each account is to "
-                f"come back, weighing how overdue they are against their own habit, whether spend "
-                f"is falling, and how established the relationship is. Trained on earlier months "
-                f"and tested only on later ones, it scores {m['auc']:.3f} against "
-                f"{m['baseline_auc']:.3f} for simply asking who is overdue."
-            ),
-        },
-        breakdown={
-            "title": "How to read the risk bands",
-            "columns": ["Band", "What it means", "Accounts", "Action"],
-            "rows": [
-                _row("High", "Unlikely to order in the next 60 days",
-                     count(bands.get("High", 0)), "Contact this week"),
-                _row("Medium", "Uncertain, watch for a further slip",
-                     count(bands.get("Medium", 0)), "Monitor"),
-                _row("Low", "Expected to order as normal",
-                     count(bands.get("Low", 0)), "None"),
-                _row("Model vs benchmark", "Whether the extra complexity earns its place",
-                     f"{m['auc']:.3f} vs {m['baseline_auc']:.3f}", verdict),
-            ],
-        },
-        actions={
-            "title": "How to use the score",
-            "items": [
-                _action(
-                    "Rank the monthly call list by risk score.",
-                    "Free: reorder existing work",
-                    "free",
-                    "The score adds most value as a priority order, not as a verdict. Account "
-                    "managers keep the same list; they just work it in a better sequence.",
-                ),
-                _action(
-                    "Cross-check high risk against account value.",
-                    "Free: combine two views",
-                    "watch",
-                    "A high-risk account worth a few thousand and one worth six figures deserve "
-                    "very different responses. Read this page alongside customer value before "
-                    "committing effort.",
-                ),
-                _action(
-                    "Re-test the model as history accumulates.",
-                    "Ongoing: quarterly",
-                    "low",
-                    f"With only {m['customers']} customers the model is working from limited "
-                    f"evidence. Re-running it each quarter, and watching whether it still beats the "
-                    f"simple overdue rule, is what keeps it trustworthy.",
                 ),
             ],
         },

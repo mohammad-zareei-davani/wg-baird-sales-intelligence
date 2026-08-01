@@ -404,41 +404,6 @@ export interface QuoteGuardResponse {
   brief: Brief;
 }
 
-/* ---------- ML: Churn risk ---------- */
-
-export interface ChurnRiskCustomer {
-  customer_id: string;
-  customer_name: string;
-  risk_score: number;
-  order_probability: number;
-  risk_band: "High" | "Medium" | "Low";
-  days_since_last_order: number;
-  avg_interval_days: number;
-  orders_last_365d: number;
-  va_last_90d: number;
-}
-
-export interface ChurnRiskResponse {
-  available: boolean;
-  reason?: string;
-  metrics?: {
-    auc: number;
-    baseline_auc: number;
-    beats_baseline: boolean;
-    accuracy: number;
-    base_rate: number;
-    train_rows: number;
-    test_rows: number;
-    customers: number;
-    lookahead_days: number;
-    train_period_end: string;
-  };
-  current_risk?: ChurnRiskCustomer[];
-  band_counts?: Record<string, number>;
-  features_used?: string[];
-  brief: Brief;
-}
-
 /* ---------- Executive summary ---------- */
 
 export interface ExecutiveFinding {
@@ -491,7 +456,6 @@ export interface ReportPayload {
   seasonality: SeasonalityResponse;
   delivery: DeliveryResponse;
   quoteGuard: QuoteGuardResponse;
-  churnRisk: ChurnRiskResponse;
   executive: ExecutiveSummary;
 }
 

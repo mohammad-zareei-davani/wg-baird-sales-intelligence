@@ -1,6 +1,13 @@
 import { useLoadedDashboardData } from "../data/DashboardDataContext";
 import { Panel } from "../components/Panel";
-import { Brief, PageTitle, SupportingCharts } from "../components/brief/Brief";
+import {
+  ActionList,
+  BreakdownTable,
+  Finding,
+  MetricRow,
+  PageTitle,
+  SupportingCharts,
+} from "../components/brief/Brief";
 import { SeasonalityChart } from "../components/charts/SeasonalityChart";
 import { SeasonalIndexChart } from "../components/charts/SeasonalIndexChart";
 import { HorizontalBarChart } from "../components/charts/HorizontalBarChart";
@@ -8,21 +15,24 @@ import { formatCurrencyCompact } from "../format";
 
 export function SeasonalityPage() {
   const { seasonality } = useLoadedDashboardData();
+  const { brief } = seasonality;
   const s = seasonality.summary;
 
   return (
     <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
-      <PageTitle eyebrow="Demand & Capacity Planning" title={seasonality.brief.title} />
-      <Brief brief={seasonality.brief} />
+      <PageTitle eyebrow="Demand & Capacity Planning" title={brief.title} />
+      <MetricRow metrics={brief.metrics} />
+      <Finding hero={brief.hero} />
+      <BreakdownTable breakdown={brief.breakdown} />
+
+      <Panel
+        title="Booked sales by month, with projection"
+        subtitle={`The dashed line projects the next ${s.forecast_horizon_months} months.`}
+      >
+        <SeasonalityChart monthly={seasonality.monthly} forecast={seasonality.sales_forecast} />
+      </Panel>
 
       <SupportingCharts>
-        <Panel
-          title="Booked sales by month, with projection"
-          subtitle={`The dashed line projects the next ${s.forecast_horizon_months} months.`}
-        >
-          <SeasonalityChart monthly={seasonality.monthly} forecast={seasonality.sales_forecast} />
-        </Panel>
-
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <Panel
             title="The shape of the year: sales"
@@ -51,6 +61,8 @@ export function SeasonalityPage() {
           />
         </Panel>
       </SupportingCharts>
+
+      <ActionList actions={brief.actions} />
     </div>
   );
 }
