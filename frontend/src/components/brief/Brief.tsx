@@ -181,7 +181,28 @@ export function Brief({ brief }: { brief: BriefType }) {
       <Finding hero={brief.hero} />
       <BreakdownTable breakdown={brief.breakdown} />
       <ActionList actions={brief.actions} />
+      <NarrativeSource brief={brief} />
     </>
+  );
+}
+
+/**
+ * States who wrote the commentary. Worth showing rather than hiding: a reader
+ * is entitled to know, and it makes clear that the figures are computed in
+ * both cases rather than produced by the model.
+ */
+export function NarrativeSource({ brief }: { brief: BriefType }) {
+  const by = brief.generated_by ?? "";
+  const isModel = by.startsWith("model:");
+  const model = isModel ? by.slice("model:".length) : null;
+
+  return (
+    <p className="text-[11.5px] leading-relaxed text-ink-muted">
+      {isModel
+        ? `Commentary written for this dataset by ${model}. Every figure is computed by the analytics and checked against the model's text before it is shown.`
+        : "Commentary from the built-in templates. Every figure is computed by the analytics."}
+      {brief.generation_note ? ` ${brief.generation_note}.` : ""}
+    </p>
   );
 }
 

@@ -20,6 +20,10 @@ export interface BriefAction {
 
 export interface Brief {
   title: string;
+  /** "template" or "model:<name>". Figures are computed either way. */
+  generated_by?: string;
+  /** Present when generated text was rejected and the template was used. */
+  generation_note?: string;
   metrics: BriefMetric[];
   hero: { value: string; caption: string; body: string };
   breakdown: { title: string; columns: string[]; rows: BriefRow[] };
@@ -46,6 +50,7 @@ export interface Summary {
   base_currency_symbol: string;
   eur_to_gbp: number;
   source: string;
+  narrative_generated: boolean;
   brief: Brief;
 }
 

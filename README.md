@@ -2,7 +2,7 @@
 
 Commercial analytics over W&G Baird job-level sales data. The platform turns a
 print-job Excel extract into board-ready briefings: what the number is, what it
-means, and what to do about it — with charts as supporting evidence, not the
+means, and what to do about it, with charts as supporting evidence rather than the
 argument.
 
 | Layer | Stack |
@@ -17,7 +17,7 @@ argument.
 
 | Page | Question answered |
 | --- | --- |
-| **Executive Briefing** | What the data is telling you — five findings that most warrant attention |
+| **Executive Briefing** | What the data is telling you, ranked by what is at stake |
 | **Customer Value** | Where value added actually comes from |
 | **Recurring Revenue** | Reprint / repeat work already won |
 | **Reorder Forecasting** | Who is due to order next |
@@ -118,7 +118,7 @@ techniques, models, or outputs involved.
 │  • Replace active dataset in jobs table (full replace, not append)          │
 │  • Append-only log in dataset_uploads (source, row count, timestamp)        │
 │  • Indexes on customer_id, sales_in, job_id                                 │
-│  • Derived columns are NOT stored — recomputed on every read                │
+│  • Derived columns are NOT stored; recomputed on every read                 │
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │
                                     ▼
@@ -183,12 +183,13 @@ techniques, models, or outputs involved.
                    └──────────────────┬─────────────────────┘
                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  6. NARRATIVE BRIEFS                               analytics/narrative.py   │
-│  • Deterministic templates (not an LLM)                                     │
+│  6. NARRATIVE BRIEFS                  analytics/narrative.py · llm/writer.py │
+│  • Prose written per dataset by the model; templates as fallback            │
+│  • Every figure computed, then written back over the model's output         │
+│  • Guardrails reject invented, rounded or hedged numbers, then retry once   │
 │  • Shape: title · 3 metrics · hero finding · breakdown table · actions      │
-│  • Figures formatted server-side so prose and tables cannot disagree        │
-│  • Executive summary picks five findings: pricing → value → repeat →        │
-│    churn → seasonality                                                      │
+│  • Executive summary ranks all insights by annual value at stake and        │
+│    drops any whose figure is zero                                           │
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │
                                     ▼
@@ -308,10 +309,51 @@ Both models report held-out performance in the UI beside their predictions.
 
 ### Narrative generation
 
-Briefings are built from deterministic templates (`analytics/narrative.py`), not
-a language model. That keeps three properties: numbers reconcile exactly with
-tables beside them, wording is identical on every load of the same data, and
-there is no external service or per-query cost.
+The prose on each page is written for the dataset actually loaded, so importing
+a different extract produces commentary about that extract rather than wording
+bent to fit it. The division of labour is strict.
+
+**The analytics own every number.** Figures are computed, formatted, then
+written back over the model's output field by field (`llm/writer.py`). Nothing
+numeric on screen depends on the model having been careful.
+
+**The model only chooses words.** It receives the figures and a factual note on
+what the insight measures. It never sees a finished draft to copy, and is never
+asked to calculate anything.
+
+**Output is validated before display** (`llm/guardrails.py`). Every numeric
+token in the generated text must appear in the computed figures, so a
+fabricated, silently rounded or hedged number rejects the draft, as does
+commentary thinner than the template it would replace. A rejected draft gets
+one corrective attempt with the specific failures fed back; anything still
+failing falls back to the built-in template.
+
+**It degrades safely.** With no API key, an unreachable API, a timeout or a
+failed validation, the dashboard renders the deterministic templates and keeps
+working. The key is optional.
+
+Each page states which path produced its commentary, and `GET /api/meta`
+reports whether generation is active. Configuration lives in `backend/.env`
+(git-ignored, see `.env.example`):
+
+```bash
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+LLM_NARRATIVE_ENABLED=true
+```
+
+Generation runs once per insight per dataset and is cached. It is warmed in the
+background at startup and after an upload, so pages are ready before anyone
+opens them: a cold dataset takes a couple of minutes to write, after which all
+eleven endpoints serve in about two seconds.
+
+Guardrails have their own tests in `backend/tests/test_guardrails.py`, covering
+invented figures, silently rounded figures, hedged figures, fabricated currency
+amounts and identifiers such as `CUST_011` that merely look numeric:
+
+```bash
+cd backend && ./.venv/Scripts/python tests/test_guardrails.py
+```
 
 ---
 

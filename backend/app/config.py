@@ -8,6 +8,21 @@ without touching analysis code.
 from __future__ import annotations
 
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Local settings and secrets live in backend/.env, which is git-ignored.
+# Values already present in the real environment win, so a deployment can
+# set them without a file.
+load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+
+
+def _flag(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 # --- Reporting currency -----------------------------------------------------
 # The dataset records sell prices in the customer's home currency (Euro or
@@ -49,6 +64,21 @@ LOW_MARGIN_VA_PCT = 0.25
 # Quote Guard flags a job when the actual price falls this far below the
 # price the model expected for comparable work.
 UNDERPRICED_THRESHOLD_PCT = 0.20
+
+# --- Narrative generation ---------------------------------------------------
+# The written parts of each report can be generated for whatever dataset is
+# loaded rather than coming from fixed templates, which keeps the wording
+# sensible when the shape of the data changes. Figures are never generated:
+# they are computed here and validated against the model's output, so the
+# model chooses words and the analytics own every number.
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini"
+LLM_NARRATIVE_ENABLED = _flag("LLM_NARRATIVE_ENABLED", True)
+LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "25"))
+
+# Generation only runs when it is both switched on and actually configured.
+LLM_ACTIVE = bool(OPENAI_API_KEY) and LLM_NARRATIVE_ENABLED
+
 
 # --- Repeat / reprint work --------------------------------------------------
 # Two runs of the same title a few days apart are one order split across

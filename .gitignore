@@ -6,6 +6,8 @@ node_modules/
 dist/
 build/
 .env
+.env.*
+!.env.example
 *.log
 data/raw/*
 !data/raw/.gitkeep
