@@ -135,10 +135,16 @@ def check_quality(brief: dict) -> list[str]:
 
     hero = brief.get("hero") or {}
     body = (hero.get("body") or "").strip()
+    caption = (hero.get("caption") or "").strip()
+    value = (hero.get("value") or "").strip()
     if len(body) < 180:
         problems.append("hero.body: too thin to be a finding")
     if body.lower().startswith(_IMPERATIVE_OPENERS):
         problems.append("hero.body: gives instructions instead of explaining")
+    # Caption finishes the sentence the headline figure starts. Restating the
+    # figure itself leaves two identical lines on the executive briefing.
+    if not caption or caption == value or not re.search(r"[A-Za-z]", caption):
+        problems.append("hero.caption: must finish the headline figure in words, not repeat it")
 
     for i, r in enumerate((brief.get("breakdown") or {}).get("rows") or []):
         desc = (r.get("description") or "").strip()

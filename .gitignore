@@ -9,7 +9,14 @@ build/
 .env.*
 !.env.example
 *.log
-# Local data. The SQLite store is created on first run and holds every
-# uploaded dataset and generated report, so none of it belongs in git.
-data/
+# Local data. Everything under data/ is generated at runtime, with two
+# deliberate exceptions committed so a fresh clone opens on a worked example
+# instead of an empty screen: the sample workbook, and the database holding
+# its finished report.
+data/*
+!data/sample/
+!data/app.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
 .DS_Store

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useLoadedDashboardData } from "../data/DashboardDataContext";
 import { BreakdownTable, MetricRow, PageTitle } from "../components/brief/Brief";
+import { EmphasizedText } from "../components/EmphasizedText";
 import { formatCurrencyCompact, formatNumber, formatPct } from "../format";
 
 const AREA_META: Record<string, { label: string; to: string }> = {
@@ -44,11 +45,11 @@ export function OverviewPage() {
       <section className="flex flex-col gap-0">
         <div className="mb-5">
           <h2 className="font-display text-[20px] font-semibold tracking-[-0.01em] text-ink-primary">
-            What most warrants attention
+            Key Findings
           </h2>
           <p className="mt-1.5 max-w-[70ch] text-[13px] leading-relaxed text-ink-secondary">
-            All {executive.considered} insights are scored on what each has at stake per year, and
-            the largest are shown here.
+            All insights are scored on what each has at stake per year, and the largest are shown
+            here.
           </p>
         </div>
 
@@ -79,25 +80,27 @@ export function OverviewPage() {
                   <div className="tnum text-[30px] font-semibold leading-none tracking-[-0.03em] text-accentStrong">
                     {f.value}
                   </div>
-                  <div className="mt-2 text-[12px] leading-snug text-ink-secondary">
-                    {f.caption}
-                  </div>
+                  {f.caption?.trim() && f.caption.trim() !== f.value.trim() && (
+                    <div className="mt-2 text-[12px] leading-snug text-ink-secondary">
+                      <EmphasizedText text={f.caption} />
+                    </div>
+                  )}
                 </div>
                 <p className="max-w-[74ch] text-[14px] leading-[1.7] text-ink-secondary">
-                  {f.body}
+                  <EmphasizedText text={f.body} />
                 </p>
               </div>
             </article>
           );
         })}
-      </section>
 
-      <div className="border-t border-edge pt-8">
-        <BreakdownTable breakdown={summary.brief.breakdown} />
-        <p className="mt-4 max-w-[80ch] text-[13px] leading-relaxed text-ink-muted">
-          {summary.brief.hero.body}
-        </p>
-      </div>
+        <div className="border-t border-edge pt-8">
+          <BreakdownTable breakdown={summary.brief.breakdown} />
+          <p className="mt-4 max-w-[80ch] text-[13px] leading-relaxed text-ink-muted">
+            {summary.brief.hero.body}
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

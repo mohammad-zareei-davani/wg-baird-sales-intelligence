@@ -71,9 +71,16 @@ macOS / Linux:
 ./.venv/bin/python -m uvicorn app.main:app --reload --port 8000
 ```
 
-API: `http://localhost:8000`  
-Nothing is seeded. On first start the report library is empty and the dashboard
-asks for a workbook. `data/app.db` is created automatically on first run.
+API: `http://localhost:8000`
+
+**A worked example ships with the repository.** `data/app.db` already contains
+the W&G Baird sample dataset and its finished report, so the dashboard opens on
+a populated Executive Briefing with no upload, no model training and no API key
+required. Nothing is generated on startup.
+
+To see the full pipeline instead, upload `data/sample/WG-Baird-Sample-Dataset.xlsx`
+(or any workbook in the same format) from the sidebar and watch the report
+build. Delete any report from the sidebar to remove it and its dataset.
 
 ### Frontend
 
@@ -228,8 +235,9 @@ techniques, models, or outputs involved.
 ```
 wg-baird-sales-intelligence/
 ├── README.md
-├── data/                    # Created on first run; git-ignored
-│   └── app.db               # Datasets and generated reports
+├── data/
+│   ├── sample/              # Sample workbook, committed
+│   └── app.db               # Datasets and reports (ships with the example)
 ├── backend/
 │   ├── requirements.txt
 │   └── app/
@@ -284,6 +292,39 @@ switching between insights involves no further requests.
 Each insight inside the payload carries a `brief` object (`title`, `metrics`,
 `hero`, `breakdown`, `actions`) alongside its raw figures. Brief numbers are
 formatted server-side so prose and tables cannot disagree.
+
+---
+
+## Reports and persistence
+
+The app holds a **library of reports** rather than one active dataset.
+
+**Uploading** validates the workbook, stores its job rows against a new report,
+and starts generation in the background. The request returns immediately; the
+dashboard polls and shows live progress ("Writing commentary: Pricing
+integrity", 67%). While a report builds it shows only that progress, never the
+previously open report.
+
+**Generation runs once.** Analytics, both models and every piece of commentary
+are produced in one pass and stored as a single payload. Reopening a report is
+a database read of about a second, not a rebuild, so returning later costs
+nothing and consumes no API credit.
+
+**Deleting** a report removes its stored dataset with it, so nothing is
+orphaned. A report left mid-build by a restart is marked as interrupted on the
+next startup rather than sitting at "generating" forever.
+
+Two tables in `data/app.db`:
+
+| Table | Holds |
+| --- | --- |
+| `reports` | Name, timestamps, status, live progress, dataset facts, and the finished report as JSON |
+| `report_jobs` | The job rows behind each report, so the analysis can be rebuilt |
+
+`data/app.db` is committed with the sample report already built, but it is also
+the live working file. Uploading or deleting reports locally will show it as
+modified in git; restore it with `git checkout -- data/app.db` if you want the
+shipped example to stay exactly as it is.
 
 ---
 

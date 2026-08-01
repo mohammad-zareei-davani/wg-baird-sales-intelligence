@@ -63,6 +63,11 @@ export function MetricRow({ metrics }: { metrics: BriefType["metrics"] }) {
 /* ---------- the finding ---------- */
 
 export function Finding({ hero }: { hero: BriefType["hero"] }) {
+  const caption =
+    hero.caption?.trim() && hero.caption.trim() !== hero.value.trim()
+      ? hero.caption
+      : null;
+
   return (
     <section className="grid gap-6 md:grid-cols-[220px_1fr] md:gap-10">
       <div>
@@ -70,7 +75,9 @@ export function Finding({ hero }: { hero: BriefType["hero"] }) {
         <div className="tnum mt-3 text-[44px] font-semibold leading-none tracking-[-0.03em] text-accentStrong">
           {hero.value}
         </div>
-        <div className="mt-2.5 text-[12.5px] leading-snug text-ink-secondary">{hero.caption}</div>
+        {caption && (
+          <div className="mt-2.5 text-[12.5px] leading-snug text-ink-secondary">{caption}</div>
+        )}
       </div>
       <p className="max-w-[68ch] border-t border-edge pt-4 text-[15px] leading-[1.7] text-ink-primary md:border-t-0 md:border-l md:pt-0 md:pl-10">
         {hero.body}
@@ -138,12 +145,9 @@ export function ActionList({ actions }: { actions: BriefType["actions"] }) {
       <h2 className="mb-4 font-display text-[20px] font-semibold tracking-[-0.01em] text-ink-primary">
         {actions.title}
       </h2>
-      <ol className="border-t border-edge">
+      <ol className="divide-y divide-edge border-t border-edge">
         {actions.items.map((a, i) => (
-          <li
-            key={a.title}
-            className="flex gap-4 border-b border-edge py-4"
-          >
+          <li key={a.title} className="flex gap-4 py-4">
             <span className="tnum mt-0.5 w-7 flex-shrink-0 text-[13px] font-semibold text-accent">
               {String(i + 1).padStart(2, "0")}
             </span>
@@ -176,44 +180,22 @@ export function ActionList({ actions }: { actions: BriefType["actions"] }) {
 
 export function Brief({ brief }: { brief: BriefType }) {
   return (
-    <>
+    <div className="flex flex-col gap-8">
       <MetricRow metrics={brief.metrics} />
       <Finding hero={brief.hero} />
       <BreakdownTable breakdown={brief.breakdown} />
       <ActionList actions={brief.actions} />
-      <NarrativeSource brief={brief} />
-    </>
+    </div>
   );
 }
 
 /**
- * States who wrote the commentary. Worth showing rather than hiding: a reader
- * is entitled to know, and it makes clear that the figures are computed in
- * both cases rather than produced by the model.
- */
-export function NarrativeSource({ brief }: { brief: BriefType }) {
-  const by = brief.generated_by ?? "";
-  const isModel = by.startsWith("model:");
-  const model = isModel ? by.slice("model:".length) : null;
-
-  return (
-    <p className="text-[11.5px] leading-relaxed text-ink-muted">
-      {isModel
-        ? `Commentary written for this dataset by ${model}. Every figure is computed by the analytics and checked against the model's text before it is shown.`
-        : "Commentary from the built-in templates. Every figure is computed by the analytics."}
-      {brief.generation_note ? ` ${brief.generation_note}.` : ""}
-    </p>
-  );
-}
-
-/**
- * Charts sit below the written brief. The rule and label mark the shift from
- * argument to evidence, so a reader who only wants the conclusion can stop.
+ * Charts sit below the written brief. Spacing and a top rule mark the shift
+ * from argument to evidence.
  */
 export function SupportingCharts({ children }: { children: ReactNode }) {
   return (
-    <section className="mt-2 flex flex-col gap-5 border-t border-edge pt-8">
-      <h2 className={LABEL}>Supporting detail</h2>
+    <section className="flex flex-col gap-5 border-t border-edge pt-8">
       {children}
     </section>
   );

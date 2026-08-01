@@ -1,6 +1,13 @@
 import { useLoadedDashboardData } from "../data/DashboardDataContext";
 import { Panel } from "../components/Panel";
-import { Brief, PageTitle, SupportingCharts } from "../components/brief/Brief";
+import {
+  ActionList,
+  BreakdownTable,
+  Finding,
+  MetricRow,
+  PageTitle,
+  SupportingCharts,
+} from "../components/brief/Brief";
 import { HorizontalBarChart } from "../components/charts/HorizontalBarChart";
 import { LeadTimeTrendChart } from "../components/charts/LeadTimeTrendChart";
 import { formatCurrency, formatNumber } from "../format";
@@ -10,35 +17,40 @@ const td = "whitespace-nowrap border-t border-edge px-4 py-2.5 text-ink-primary"
 
 export function DeliveryPage() {
   const { delivery } = useLoadedDashboardData();
+  const { brief } = delivery;
 
   return (
     <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
-      <PageTitle eyebrow="Production Turnaround" title={delivery.brief.title} />
-      <Brief brief={delivery.brief} />
+      <PageTitle eyebrow="Production Turnaround" title={brief.title} />
+      <MetricRow metrics={brief.metrics} />
+      <Finding hero={brief.hero} />
+      <BreakdownTable breakdown={brief.breakdown} />
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <Panel title="Turnaround by type of work" subtitle="Median days from booking to despatch">
+          <HorizontalBarChart
+            data={delivery.by_work_type.map((w) => ({ name: w.work_type, value: w.median_days }))}
+            colorIndex={2}
+            valueFormatter={(v) => `${v}d`}
+            valueLabel="Median turnaround"
+            height={220}
+          />
+        </Panel>
+
+        <Panel title="Slowest products" subtitle="Products with enough volume to be meaningful">
+          <HorizontalBarChart
+            data={delivery.by_product.slice(0, 8).map((p) => ({ name: p.product_type, value: p.median_days }))}
+            colorIndex={1}
+            valueFormatter={(v) => `${v}d`}
+            valueLabel="Median turnaround"
+            height={260}
+          />
+        </Panel>
+      </div>
+
+      <ActionList actions={brief.actions} />
 
       <SupportingCharts>
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <Panel title="Turnaround by type of work" subtitle="Median days from booking to despatch">
-            <HorizontalBarChart
-              data={delivery.by_work_type.map((w) => ({ name: w.work_type, value: w.median_days }))}
-              colorIndex={2}
-              valueFormatter={(v) => `${v}d`}
-              valueLabel="Median turnaround"
-              height={220}
-            />
-          </Panel>
-
-          <Panel title="Slowest products" subtitle="Products with enough volume to be meaningful">
-            <HorizontalBarChart
-              data={delivery.by_product.slice(0, 8).map((p) => ({ name: p.product_type, value: p.median_days }))}
-              colorIndex={1}
-              valueFormatter={(v) => `${v}d`}
-              valueLabel="Median turnaround"
-              height={260}
-            />
-          </Panel>
-        </div>
-
         <Panel title="Is turnaround improving or slipping?" subtitle="Median days to despatch, month by month">
           <LeadTimeTrendChart data={delivery.monthly_trend} />
         </Panel>

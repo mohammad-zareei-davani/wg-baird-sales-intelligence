@@ -11,7 +11,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.llm.guardrails import allowed_from_brief, check_brief, find_violations  # noqa: E402
+from app.llm.guardrails import (  # noqa: E402
+    allowed_from_brief,
+    check_brief,
+    check_quality,
+    find_violations,
+)
 
 
 COMPUTED = {
@@ -108,6 +113,12 @@ def test_row_description_is_scanned():
     bad = _brief_with()
     bad["breakdown"]["rows"][0]["description"] = "Offset presses, 61% of jobs"
     assert check_brief(bad, ALLOWED), "figures in table descriptions must be checked too"
+
+
+def test_caption_repeating_headline_figure_is_caught():
+    bad = _brief_with(**{"hero.caption": "22.5%"})
+    problems = check_quality(bad)
+    assert any("hero.caption" in p for p in problems), problems
 
 
 if __name__ == "__main__":

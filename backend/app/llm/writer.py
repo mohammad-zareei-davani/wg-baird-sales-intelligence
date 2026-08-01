@@ -309,7 +309,18 @@ def _merge_numbers(generated: dict, computed: dict) -> dict:
     merged = json.loads(json.dumps(generated))  # cheap deep copy
 
     comp_hero = computed.get("hero") or {}
-    merged.setdefault("hero", {})["value"] = comp_hero.get("value", "")
+    hero = merged.setdefault("hero", {})
+    hero["value"] = comp_hero.get("value", "")
+    # Caption must be prose that finishes the headline figure. If the model
+    # echoed the figure (or wrote only digits), keep the computed caption.
+    gen_caption = (hero.get("caption") or "").strip()
+    comp_value = (comp_hero.get("value") or "").strip()
+    if (
+        not gen_caption
+        or gen_caption == comp_value
+        or not any(ch.isalpha() for ch in gen_caption)
+    ):
+        hero["caption"] = comp_hero.get("caption", "")
 
     comp_metrics = computed.get("metrics") or []
     for i, m in enumerate(merged.get("metrics") or []):
