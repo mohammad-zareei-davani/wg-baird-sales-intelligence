@@ -454,10 +454,53 @@ export interface ExecutiveFinding {
   basis: string;
 }
 
-export interface ExecutiveSummaryResponse {
+export interface ExecutiveSummary {
   findings: ExecutiveFinding[];
-  /** How many insights were scored before the top ones were selected. */
   considered: number;
   years_of_data: number;
-  briefs: Record<string, Brief>;
+}
+
+/* ---------- Reports ---------- */
+
+export type ReportStatus = "generating" | "ready" | "failed";
+
+/** Sidebar-level information about a stored report. */
+export interface ReportMeta {
+  id: number;
+  name: string;
+  created_at: string;
+  completed_at: string | null;
+  status: ReportStatus;
+  progress: string | null;
+  progress_pct: number;
+  row_count: number;
+  customer_count: number;
+  period_from: string | null;
+  period_to: string | null;
+  error: string | null;
+}
+
+/** Everything the dashboard renders, built once and stored. */
+export interface ReportPayload {
+  summary: Summary;
+  customerValue: CustomerValueResponse;
+  repeatBusiness: RepeatBusinessResponse;
+  reorder: ReorderResponse;
+  churn: ChurnResponse;
+  pricing: PricingResponse;
+  seasonality: SeasonalityResponse;
+  delivery: DeliveryResponse;
+  quoteGuard: QuoteGuardResponse;
+  churnRisk: ChurnRiskResponse;
+  executive: ExecutiveSummary;
+}
+
+export interface ReportDetail {
+  report: ReportMeta;
+  /** Null until the report finishes generating. */
+  payload: ReportPayload | null;
+}
+
+export interface ReportListResponse {
+  reports: ReportMeta[];
 }

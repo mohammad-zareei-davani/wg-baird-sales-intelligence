@@ -1,48 +1,33 @@
-import type {
-  ChurnResponse,
-  ChurnRiskResponse,
-  CustomerValueResponse,
-  DeliveryResponse,
-  ExecutiveSummaryResponse,
-  PricingResponse,
-  QuoteGuardResponse,
-  RepeatBusinessResponse,
-  ReorderResponse,
-  SeasonalityResponse,
-  Summary,
-} from "./types";
+import type { ReportDetail, ReportMeta, ReportListResponse } from "./types";
 
-async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(path);
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, init);
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`${path} failed: ${res.status} ${body}`);
+    let detail = `${res.status}`;
+    try {
+      const body = await res.json();
+      detail = body?.detail ?? detail;
+    } catch {
+      detail = (await res.text()) || detail;
+    }
+    throw new Error(detail);
   }
   return res.json() as Promise<T>;
 }
 
 export const api = {
-  summary: () => getJson<Summary>("/api/summary"),
-  customerValue: (topN = 20) =>
-    getJson<CustomerValueResponse>(`/api/insights/customer-value?top_n=${topN}`),
-  reorder: () => getJson<ReorderResponse>("/api/insights/reorder"),
-  churn: () => getJson<ChurnResponse>("/api/insights/churn"),
-  pricing: () => getJson<PricingResponse>("/api/insights/pricing"),
-  seasonality: (horizon = 6) =>
-    getJson<SeasonalityResponse>(`/api/insights/seasonality?horizon=${horizon}`),
-  delivery: () => getJson<DeliveryResponse>("/api/insights/delivery"),
-  repeatBusiness: () => getJson<RepeatBusinessResponse>("/api/insights/repeat-business"),
-  quoteGuard: () => getJson<QuoteGuardResponse>("/api/ml/quote-guard"),
-  churnRisk: () => getJson<ChurnRiskResponse>("/api/ml/churn-risk"),
-  executiveSummary: () => getJson<ExecutiveSummaryResponse>("/api/executive-summary"),
-  uploadData: async (file: File) => {
+  listReports: () => request<ReportListResponse>("/api/reports"),
+
+  getReport: (id: number) => request<ReportDetail>(`/api/reports/${id}`),
+
+  uploadReport: (file: File) => {
     const form = new FormData();
     form.append("file", file);
-    const res = await fetch("/api/data/upload", { method: "POST", body: form });
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`upload failed: ${res.status} ${body}`);
-    }
-    return res.json() as Promise<{ status: string; source: string; row_count: number }>;
+    return request<{ report: ReportMeta }>("/api/reports", { method: "POST", body: form });
   },
+
+  deleteReport: (id: number) =>
+    request<{ deleted: number; reports: ReportMeta[] }>(`/api/reports/${id}`, {
+      method: "DELETE",
+    }),
 };

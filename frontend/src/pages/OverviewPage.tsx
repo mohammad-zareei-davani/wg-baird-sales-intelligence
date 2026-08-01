@@ -48,8 +48,7 @@ export function OverviewPage() {
           </h2>
           <p className="mt-1.5 max-w-[70ch] text-[13px] leading-relaxed text-ink-secondary">
             All {executive.considered} insights are scored on what each has at stake per year, and
-            the largest are shown here. Nothing is fixed in place: the order changes with the data,
-            and an insight with nothing behind it drops out.
+            the largest are shown here.
           </p>
         </div>
 
@@ -73,12 +72,6 @@ export function OverviewPage() {
                     {meta.label} →
                   </Link>
                 )}
-              </div>
-
-              {/* Why this finding sits where it does in the list. */}
-              <div className="mt-2 flex flex-wrap items-baseline gap-x-2 text-[12px]">
-                <span className="tnum font-semibold text-ink-primary">{f.at_stake_label}</span>
-                <span className="text-ink-muted">{f.basis.toLowerCase()}</span>
               </div>
 
               <div className="mt-4 grid gap-5 md:grid-cols-[180px_1fr] md:gap-8">

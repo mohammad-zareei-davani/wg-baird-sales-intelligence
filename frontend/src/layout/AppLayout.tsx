@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { ReportLibrary } from "../components/ReportLibrary";
+import { EmptyLibrary, FailedReport, GeneratingReport } from "../components/ReportStates";
 import { UploadControl } from "../components/UploadControl";
-import { useDashboardData } from "../data/DashboardDataContext";
+import { useDashboard } from "../data/DashboardDataContext";
 
 interface NavItem {
   to: string;
@@ -42,105 +44,109 @@ const ALL_ITEMS = NAV_GROUPS.flatMap((g) =>
 );
 
 export function AppLayout() {
-  const { data, error, loading, reload } = useDashboardData();
+  const { reports, selected, payload, loadingLibrary, error } = useDashboard();
   const { pathname } = useLocation();
   const current = ALL_ITEMS.find((i) => i.to === pathname);
 
-  // Without this, arriving on a new page keeps the previous page's scroll
-  // position and drops the reader into the middle of the brief.
+  // Arriving on a new page should start at the top of it.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
+  const hasReport = Boolean(payload);
+
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
-      <aside className="flex w-full flex-shrink-0 flex-col bg-rail text-rail-text lg:sticky lg:top-0 lg:h-screen lg:w-[248px]">
-        <div className="flex items-start gap-3 border-b border-rail-edge px-5 py-5">
-          <div
-            className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center bg-accent text-[10px] font-bold tracking-[0.12em] text-white"
-            aria-hidden="true"
-          >
+      <aside className="flex w-full flex-shrink-0 flex-col bg-rail lg:sticky lg:top-0 lg:h-screen lg:w-[248px]">
+        <div className="flex items-center gap-2.5 px-5 py-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-[11px] font-bold tracking-wide text-white">
             WGB
           </div>
-          <div className="min-w-0 leading-tight">
-            <div className="font-display text-[17px] font-semibold tracking-[-0.01em] text-white">
-              W&amp;G Baird
-            </div>
-            <div className="mt-0.5 text-[11px] font-medium tracking-wide text-rail-muted">
-              Sales Intelligence
-            </div>
+          <div className="leading-tight">
+            <div className="text-[13px] font-semibold text-white">W&amp;G Baird</div>
+            <div className="text-[11px] text-rail-muted">Sales Intelligence</div>
           </div>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-5">
-          {NAV_GROUPS.map((group, gi) => (
-            <div key={group.heading ?? `g${gi}`} className="flex flex-col gap-0.5">
-              {group.heading && (
-                <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-label text-rail-muted">
-                  {group.heading}
-                </div>
-              )}
-              {group.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) =>
-                    `relative px-3 py-2 text-[13px] transition-colors duration-150 ${
-                      isActive
-                        ? "bg-rail-soft font-semibold text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[2px] before:bg-accent"
-                        : "text-rail-text hover:bg-rail-soft/60 hover:text-white"
-                    }`
-                  }
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            </div>
-          ))}
-        </nav>
+        <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 pb-4">
+          {/* Insight navigation only makes sense once a report is open. */}
+          {hasReport &&
+            NAV_GROUPS.map((group, gi) => (
+              <div key={group.heading ?? `g${gi}`} className="flex flex-col gap-px">
+                {group.heading && (
+                  <div className="px-2.5 pb-1.5 text-[10px] font-semibold uppercase tracking-label text-rail-muted">
+                    {group.heading}
+                  </div>
+                )}
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.end}
+                    className={({ isActive }) =>
+                      `rounded-md px-2.5 py-[7px] text-[13px] transition-colors ${
+                        isActive
+                          ? "bg-rail-soft font-semibold text-white"
+                          : "text-rail-text hover:bg-rail-soft/60 hover:text-white"
+                      }`
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </div>
+            ))}
 
-        <div className="border-t border-rail-edge px-4 py-4">
-          <UploadControl onUploaded={reload} />
+          <ReportLibrary />
+        </div>
+
+        <div className="border-t border-rail-edge px-4 py-3.5">
+          <UploadControl />
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Keeps the dataset the figures came from visible on every page,
-            without it, a screenshot of any single page is unattributable. */}
-        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-edge bg-surface/85 px-6 py-2.5 backdrop-blur-md lg:px-10">
+        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-edge bg-surface/90 px-6 py-2.5 backdrop-blur lg:px-9">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[12px]">
-            {current?.group && (
+            {hasReport && current?.group && (
               <>
                 <span className="text-ink-muted">{current.group}</span>
-                <span className="text-ink-muted/50">/</span>
+                <span className="text-ink-muted/60">/</span>
               </>
             )}
-            <span className="font-medium text-ink-primary">{current?.label ?? "Dashboard"}</span>
+            <span className="font-medium text-ink-secondary">
+              {hasReport ? current?.label ?? "Dashboard" : "Reports"}
+            </span>
           </nav>
-          {data && (
-            <span className="ml-auto text-[11px] tracking-wide text-ink-muted">
-              {data.summary.source} · {data.summary.row_count.toLocaleString("en-GB")} jobs ·{" "}
-              {data.summary.date_range.from} to {data.summary.date_range.to} · figures in{" "}
-              {data.summary.base_currency}
+          {selected && payload && (
+            <span className="ml-auto text-[11.5px] text-ink-muted">
+              {selected.name} · {payload.summary.row_count.toLocaleString("en-GB")} jobs ·{" "}
+              {payload.summary.date_range.from} to {payload.summary.date_range.to} · figures in{" "}
+              {payload.summary.base_currency}
             </span>
           )}
         </div>
 
-        <main className="flex-1 px-6 py-8 lg:px-10 lg:py-10">
+        <main className="flex-1 px-6 py-7 lg:px-9 lg:py-9">
           {error && (
-            <div className="mx-auto mb-6 max-w-[1080px] border border-status-critical/20 bg-status-criticalBg px-4 py-3 text-[13px] text-status-criticalText">
+            <div className="mx-auto mb-5 max-w-[1080px] rounded-md border border-status-critical/25 bg-status-criticalBg px-4 py-3 text-[13px] text-status-criticalText">
               {error}
             </div>
           )}
-          {loading && !data && (
-            <div className="text-[13px] text-ink-muted">
-              Loading dashboard. Training models on first load…
-            </div>
-          )}
-          {data && (
-            <div key={pathname} className="page-enter">
-              <Outlet />
+
+          {loadingLibrary ? (
+            <div className="text-[13px] text-ink-muted">Loading…</div>
+          ) : reports.length === 0 ? (
+            <EmptyLibrary />
+          ) : selected?.status === "generating" ? (
+            <GeneratingReport report={selected} />
+          ) : selected?.status === "failed" ? (
+            <FailedReport report={selected} />
+          ) : payload ? (
+            <Outlet />
+          ) : (
+            <div className="mx-auto max-w-[560px] py-24 text-center text-[13px] text-ink-muted">
+              Select a report from the sidebar, or upload a new dataset.
             </div>
           )}
         </main>

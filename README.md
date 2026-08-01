@@ -257,127 +257,35 @@ wg-baird-sales-intelligence/
 
 ### Route map
 
-| Route | Page | Endpoint(s) |
-| --- | --- | --- |
-| `/` | Executive Briefing | `GET /api/summary`, `GET /api/executive-summary` |
-| `/customer-value` | Customer Value | `GET /api/insights/customer-value` |
-| `/repeat-business` | Recurring Revenue | `GET /api/insights/repeat-business` |
-| `/reorder` | Reorder Forecasting | `GET /api/insights/reorder` |
-| `/churn` | Account Retention | `GET /api/insights/churn` |
-| `/pricing` | Pricing Integrity | `GET /api/insights/pricing` |
-| `/seasonality` | Demand & Capacity | `GET /api/insights/seasonality` |
-| `/delivery` | Production Turnaround | `GET /api/insights/delivery` |
-| `/quote-guard` | Quote Intelligence | `GET /api/ml/quote-guard` |
-| `/churn-risk` | Retention Risk | `GET /api/ml/churn-risk` |
+Every page reads from the one payload fetched for the selected report, so
+switching between insights involves no further requests.
 
----
-
-## Data and persistence
-
-| Asset | Role |
+| Route | Page |
 | --- | --- |
-| `data/raw/sample_data.xlsx` | Seeds the database on first run |
-| `data/app.db` → `jobs` | Active dataset (indexed on customer, booking date, title) |
-| `data/app.db` → `dataset_uploads` | Append-only log of every file loaded |
+| `/` | Executive Briefing |
+| `/customer-value` | Customer Value |
+| `/repeat-business` | Recurring Revenue |
+| `/reorder` | Reorder Forecasting |
+| `/churn` | Account Retention |
+| `/pricing` | Pricing Integrity |
+| `/seasonality` | Demand & Capacity |
+| `/delivery` | Production Turnaround |
+| `/quote-guard` | Quote Intelligence |
+| `/churn-risk` | Retention Risk |
 
-Restarting the API reads from SQLite; the original Excel file need not remain
-on disk. Uploading a new workbook in the same format (dashboard or
-`POST /api/data/upload`) replaces the dataset, re-derives every insight, and
-retrains both models. Raw data and the database are excluded from git.
-
-### Data-quality notes
-
-- **Two currencies.** Sell prices are stored in the customer’s home currency in
-  a single column. Summing them raw overstates the book by roughly £2.0M. All
-  money figures are converted to GBP at a planning rate (`BAIRD_EUR_GBP`,
-  default `0.86`) before aggregation. The currency split appears on the
-  overview page.
-- **Product naming drift.** The source has 64 product-type labels, some of
-  which are spelling variants of the same category. Variants are merged on an
-  alphanumeric key; genuinely distinct labels are left alone.
-
----
-
-## Modelling
-
-Both models report held-out performance in the UI beside their predictions.
-
-| Model | Approach | Notes |
-| --- | --- | --- |
-| **Quote Guard** | `HistGradientBoostingRegressor` on `log(sell_price_base)` | Uses specification and input costs only. Value added, markup, and manual adjustment are excluded (they are outcomes of pricing, not inputs). Median absolute percentage error ≈ 6.7% on unseen jobs. |
-| **Churn risk** | `HistGradientBoostingClassifier` on a customer-month panel | Features use history before each observation date only; train/test split is by time. Scored against a naive overdue-gap AUC. With ~50 customers it is a ranking aid, not a verdict. |
-
-### Narrative generation
-
-The prose on each page is written for the dataset actually loaded, so importing
-a different extract produces commentary about that extract rather than wording
-bent to fit it. The division of labour is strict.
-
-**The analytics own every number.** Figures are computed, formatted, then
-written back over the model's output field by field (`llm/writer.py`). Nothing
-numeric on screen depends on the model having been careful.
-
-**The model only chooses words.** It receives the figures and a factual note on
-what the insight measures. It never sees a finished draft to copy, and is never
-asked to calculate anything.
-
-**Output is validated before display** (`llm/guardrails.py`). Every numeric
-token in the generated text must appear in the computed figures, so a
-fabricated, silently rounded or hedged number rejects the draft, as does
-commentary thinner than the template it would replace. A rejected draft gets
-one corrective attempt with the specific failures fed back; anything still
-failing falls back to the built-in template.
-
-**It degrades safely.** With no API key, an unreachable API, a timeout or a
-failed validation, the dashboard renders the deterministic templates and keeps
-working. The key is optional.
-
-Each page states which path produced its commentary, and `GET /api/meta`
-reports whether generation is active. Configuration lives in `backend/.env`
-(git-ignored, see `.env.example`):
-
-```bash
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o-mini
-LLM_NARRATIVE_ENABLED=true
-```
-
-Generation runs once per insight per dataset and is cached. It is warmed in the
-background at startup and after an upload, so pages are ready before anyone
-opens them: a cold dataset takes a couple of minutes to write, after which all
-eleven endpoints serve in about two seconds.
-
-Guardrails have their own tests in `backend/tests/test_guardrails.py`, covering
-invented figures, silently rounded figures, hedged figures, fabricated currency
-amounts and identifiers such as `CUST_011` that merely look numeric:
-
-```bash
-cd backend && ./.venv/Scripts/python tests/test_guardrails.py
-```
-
----
-
-## API reference
+### API
 
 | Endpoint | Returns |
 | --- | --- |
-| `GET /api/summary` | Headline figures and currency split |
-| `GET /api/meta` | Reporting assumptions and thresholds |
-| `GET /api/executive-summary` | Findings most warranting senior attention |
-| `GET /api/insights/customer-value` | Value by customer, work type, product, sector |
-| `GET /api/insights/repeat-business` | Recurring titles and reprint pipeline |
-| `GET /api/insights/reorder` | Reorder cadence and projections |
-| `GET /api/insights/churn` | Rules-based dormancy and follow-up list |
-| `GET /api/insights/pricing` | Overrides, discounting, below-cost work |
-| `GET /api/insights/seasonality` | Monthly trend, seasonal index, forecast |
-| `GET /api/insights/delivery` | Turnaround performance |
-| `GET /api/ml/quote-guard` | Price benchmark, metrics, flagged jobs |
-| `GET /api/ml/churn-risk` | Risk scores, metrics, benchmark comparison |
-| `POST /api/data/upload` | Replace active dataset (`multipart/form-data`) |
-| `GET /api/data/history` | Log of datasets loaded |
+| `GET /api/reports` | Every stored report, newest first (drives the sidebar) |
+| `GET /api/reports/{id}` | A report's status and, once ready, its full payload |
+| `POST /api/reports` | Upload a workbook and start generating (multipart `file`) |
+| `DELETE /api/reports/{id}` | Delete a report and the dataset behind it |
+| `GET /api/meta` | Reporting assumptions and narrative-generation status |
+| `GET /api/health` | Liveness and report count |
 
-Every insight and ML endpoint includes a `brief` object (`title`, `metrics`,
-`hero`, `breakdown`, `actions`) alongside raw figures. Brief numbers are
+Each insight inside the payload carries a `brief` object (`title`, `metrics`,
+`hero`, `breakdown`, `actions`) alongside its raw figures. Brief numbers are
 formatted server-side so prose and tables cannot disagree.
 
 ---
