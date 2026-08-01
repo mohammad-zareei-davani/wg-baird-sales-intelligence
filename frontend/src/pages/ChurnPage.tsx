@@ -78,14 +78,14 @@ export function ChurnPage() {
         </div>
       </section>
 
-      <ActionList actions={brief.actions} />
-
       <Panel
         title="Follow-up list"
-        subtitle="At-risk and dormant accounts, ranked by lifetime value, so the highest-value relationships come first"
+        subtitle="At risk means silence of 1.25–2.5× that account's usual gap between orders; dormant means beyond 2.5×. Ranked by lifetime value so the highest-value relationships come first."
       >
         <FollowUpTable rows={churn.follow_up_opportunities} />
       </Panel>
+
+      <ActionList actions={brief.actions} />
     </div>
   );
 }

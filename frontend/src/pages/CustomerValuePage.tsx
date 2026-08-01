@@ -41,8 +41,6 @@ export function CustomerValuePage() {
         <WorkTypeChart data={customerValue.work_type_breakdown} />
       </Panel>
 
-      <ActionList actions={brief.actions} />
-
       <Panel title="Account detail">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[13px]">
@@ -75,6 +73,8 @@ export function CustomerValuePage() {
           </table>
         </div>
       </Panel>
+
+      <ActionList actions={brief.actions} />
     </div>
   );
 }

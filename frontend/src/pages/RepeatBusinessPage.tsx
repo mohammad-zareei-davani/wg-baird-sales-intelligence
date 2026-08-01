@@ -50,8 +50,6 @@ export function RepeatBusinessPage() {
         </Panel>
       </div>
 
-      <ActionList actions={brief.actions} />
-
       <Panel
         title="Titles due a reprint"
         subtitle="Past their own average reprint cycle, ranked by what a typical run is worth"
@@ -94,6 +92,8 @@ export function RepeatBusinessPage() {
           </table>
         </div>
       </Panel>
+
+      <ActionList actions={brief.actions} />
     </div>
   );
 }

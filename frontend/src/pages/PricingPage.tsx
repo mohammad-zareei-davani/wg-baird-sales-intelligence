@@ -87,8 +87,6 @@ export function PricingPage() {
         </div>
       </Panel>
 
-      <ActionList actions={brief.actions} />
-
       <SupportingCharts>
         <Panel
           title="Accounts carrying below-cost work"
@@ -120,6 +118,8 @@ export function PricingPage() {
           </div>
         </Panel>
       </SupportingCharts>
+
+      <ActionList actions={brief.actions} />
     </div>
   );
 }

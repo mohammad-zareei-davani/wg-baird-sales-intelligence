@@ -1,7 +1,14 @@
 import { useMemo, useState } from "react";
 import { useLoadedDashboardData } from "../data/DashboardDataContext";
 import { Panel } from "../components/Panel";
-import { Brief, PageTitle, SupportingCharts } from "../components/brief/Brief";
+import {
+  ActionList,
+  BreakdownTable,
+  Finding,
+  MetricRow,
+  PageTitle,
+  SupportingCharts,
+} from "../components/brief/Brief";
 import { ReorderTable } from "../components/ReorderTable";
 import type { ReorderStatus } from "../api/types";
 
@@ -15,6 +22,7 @@ const FILTERS: Array<{ key: ReorderStatus | "All"; label: string }> = [
 
 export function ReorderPage() {
   const { reorder } = useLoadedDashboardData();
+  const { brief } = reorder;
   const [filter, setFilter] = useState<ReorderStatus | "All">("All");
 
   const rows = useMemo(
@@ -24,8 +32,10 @@ export function ReorderPage() {
 
   return (
     <div className="mx-auto flex max-w-[1080px] flex-col gap-8">
-      <PageTitle eyebrow="Reorder Forecasting" title={reorder.brief.title} />
-      <Brief brief={reorder.brief} />
+      <PageTitle eyebrow="Reorder Forecasting" title={brief.title} />
+      <MetricRow metrics={brief.metrics} />
+      <Finding hero={brief.hero} />
+      <BreakdownTable breakdown={brief.breakdown} />
 
       <SupportingCharts>
         <Panel title="Forecast by customer" subtitle="Each account's normal rhythm and where they sit against it">
@@ -48,6 +58,8 @@ export function ReorderPage() {
           <ReorderTable rows={rows} />
         </Panel>
       </SupportingCharts>
+
+      <ActionList actions={brief.actions} />
     </div>
   );
 }

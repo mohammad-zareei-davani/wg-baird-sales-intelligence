@@ -48,8 +48,6 @@ export function DeliveryPage() {
         </Panel>
       </div>
 
-      <ActionList actions={brief.actions} />
-
       <SupportingCharts>
         <Panel title="Is turnaround improving or slipping?" subtitle="Median days to despatch, month by month">
           <LeadTimeTrendChart data={delivery.monthly_trend} />
@@ -89,6 +87,8 @@ export function DeliveryPage() {
           </div>
         </Panel>
       </SupportingCharts>
+
+      <ActionList actions={brief.actions} />
     </div>
   );
 }
