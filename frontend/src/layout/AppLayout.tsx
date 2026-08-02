@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { PrintAllPages } from "../components/PrintAllPages";
 import { ReportLibrary } from "../components/ReportLibrary";
 import { EmptyLibrary, FailedReport, GeneratingReport } from "../components/ReportStates";
 import { UploadControl } from "../components/UploadControl";
@@ -44,17 +45,62 @@ export function AppLayout() {
   const { reports, selected, payload, loadingLibrary, error } = useDashboard();
   const { pathname } = useLocation();
   const current = ALL_ITEMS.find((i) => i.to === pathname);
+  const [printing, setPrinting] = useState(false);
+  const printCleanupRef = useRef<(() => void) | null>(null);
 
   // Arriving on a new page should start at the top of it.
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if (!printing) window.scrollTo(0, 0);
+  }, [pathname, printing]);
+
+  const finishPrint = useCallback(() => {
+    printCleanupRef.current?.();
+    printCleanupRef.current = null;
+    setPrinting(false);
+    document.body.classList.remove("is-printing");
+  }, []);
+
+  // Mount all pages, wait for charts to lay out, then open the system print dialog.
+  useEffect(() => {
+    if (!printing) return;
+
+    document.body.classList.add("is-printing");
+    let cancelled = false;
+    let settleTimer = 0;
+    const fallbackTimer = window.setTimeout(finishPrint, 60_000);
+
+    const startPrint = () => {
+      if (cancelled) return;
+      const onAfterPrint = () => finishPrint();
+      window.addEventListener("afterprint", onAfterPrint);
+      printCleanupRef.current = () => {
+        window.removeEventListener("afterprint", onAfterPrint);
+        window.clearTimeout(fallbackTimer);
+      };
+      window.print();
+    };
+
+    // Two frames + a short settle so Recharts ResponsiveContainers get real widths.
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        settleTimer = window.setTimeout(startPrint, 450);
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      window.clearTimeout(settleTimer);
+      window.clearTimeout(fallbackTimer);
+      if (printing) document.body.classList.remove("is-printing");
+    };
+  }, [printing, finishPrint]);
 
   const hasReport = Boolean(payload);
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
-      <aside className="flex w-full flex-shrink-0 flex-col bg-rail lg:sticky lg:top-0 lg:h-screen lg:w-[248px]">
+      <aside className="no-print flex w-full flex-shrink-0 flex-col bg-rail lg:sticky lg:top-0 lg:h-screen lg:w-[248px]">
         <div className="flex items-center gap-2.5 px-5 py-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-[11px] font-bold tracking-wide text-white">
             WGB
@@ -105,7 +151,7 @@ export function AppLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-edge bg-surface/90 px-6 py-2.5 backdrop-blur lg:px-9">
+        <div className="no-print sticky top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-edge bg-surface/90 px-6 py-2.5 backdrop-blur lg:px-9">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[12px]">
             {hasReport && current?.group && (
               <>
@@ -118,22 +164,49 @@ export function AppLayout() {
             </span>
           </nav>
           {selected && payload && (
-            <span className="ml-auto text-[11.5px] text-ink-muted">
-              {selected.name} · {payload.summary.row_count.toLocaleString("en-GB")} jobs ·{" "}
-              {payload.summary.date_range.from} to {payload.summary.date_range.to} · figures in{" "}
-              {payload.summary.base_currency}
-            </span>
+            <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="text-[11.5px] text-ink-muted">
+                {selected.name} · {payload.summary.row_count.toLocaleString("en-GB")} jobs ·{" "}
+                {payload.summary.date_range.from} to {payload.summary.date_range.to} · figures in{" "}
+                {payload.summary.base_currency}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPrinting(true)}
+                disabled={printing}
+                className="inline-flex items-center gap-1.5 rounded-md border border-edge bg-raised px-2.5 py-1.5 text-[12px] font-semibold text-ink-secondary transition-colors hover:border-accent/40 hover:text-accentStrong disabled:cursor-wait disabled:opacity-60"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M6 9V3h12v6" />
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <path d="M6 14h12v7H6z" />
+                </svg>
+                {printing ? "Preparing PDF…" : "Print PDF"}
+              </button>
+            </div>
           )}
         </div>
 
         <main className="flex-1 px-6 py-7 lg:px-9 lg:py-9">
           {error && (
-            <div className="mx-auto mb-5 max-w-[1080px] rounded-md border border-status-critical/25 bg-status-criticalBg px-4 py-3 text-[13px] text-status-criticalText">
+            <div className="no-print mx-auto mb-5 max-w-[1080px] rounded-md border border-status-critical/25 bg-status-criticalBg px-4 py-3 text-[13px] text-status-criticalText">
               {error}
             </div>
           )}
 
-          {loadingLibrary ? (
+          {printing && payload ? (
+            <PrintAllPages />
+          ) : loadingLibrary ? (
             <div className="text-[13px] text-ink-muted">Loading…</div>
           ) : reports.length === 0 ? (
             <EmptyLibrary />

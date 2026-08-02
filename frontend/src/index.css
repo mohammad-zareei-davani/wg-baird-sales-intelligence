@@ -36,3 +36,45 @@
     animation: fade-up 0.5s ease-out 0.06s both;
   }
 }
+
+/* Multi-page report PDF: hide chrome, keep insight content only. */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    background-image: none !important;
+    color: #0f1419;
+  }
+
+  body * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .print-section {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .print-section:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  /* Interactive filter chips are useless on paper. */
+  .print-section button {
+    display: none !important;
+  }
+}
